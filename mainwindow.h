@@ -45,6 +45,10 @@ private slots:
 
     void sendFrame();
 
+    void macAddressTableTest();
+
+    void on_runMacTableButton_clicked();
+
 private:
     Ui::MainWindow *ui;
 

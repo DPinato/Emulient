@@ -64,12 +64,12 @@ std::string Utilities::intToMacAddress(uint64_t mac) {
     }
 
 
-    qDebug() << "t: " << t.c_str();
+//    qDebug() << "t: " << t.c_str();
 
     for (int i = 2; i < (int)t.length(); i+=3) {
         t.insert(i, ":");
     }
-    qDebug() << "t: " << t.c_str();
+//    qDebug() << "t: " << t.c_str();
 
     return t;
 
