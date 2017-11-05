@@ -22,6 +22,9 @@
 #include <QString>
 
 #include "utilities.h"
+#include "l2helper.h"
+
+class L2Helper;
 
 
 #define DEFAULT_IF	"eth0"
@@ -42,21 +45,16 @@ public:
 
 private slots:
     void on_sendButton_clicked();
+    void on_runMacTableButton_clicked();
 
     void sendFrame();
-
     void macAddressTableTest();
-
-    void on_runMacTableButton_clicked();
 
 private:
     Ui::MainWindow *ui;
 
-
-
-//    uint8_t srcMac[6];  // TODO: handling this as a 48-bit int might be better
-//    uint8_t dstMac[6];  // TODO: handling this as a 48-bit int might be better
-
+    // handle MAC addresses as 48-bit unsigned int
+    // the Utilities class allows for conversions
     uint64_t srcMac;
     uint64_t dstMac;
 

@@ -28,11 +28,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
 main.cpp \
 mainwindow.cpp \
-utilities.cpp
+utilities.cpp \
+    l2helper.cpp
 
 HEADERS += \
 mainwindow.h \
-utilities.h
+utilities.h \
+    l2helper.h
 
 FORMS += \
 mainwindow.ui
+
+DISTFILES += \
+    README.md

@@ -175,6 +175,9 @@ void MainWindow::macAddressTableTest() {
     struct ifreq if_mac;
     int tx_len = 0;
     char sendbuf[BUF_SIZ];
+
+    L2Helper *test = new L2Helper();
+
     struct ether_header *eh = (struct ether_header *) sendbuf;
     struct iphdr *iph = (struct iphdr *) (sendbuf + sizeof(struct ether_header));
     struct sockaddr_ll socket_address;
