@@ -40,6 +40,30 @@ void MainWindow::sendFrame() {
 
     std::string tmpSrc = ui->srcMacEdit->text().toStdString();
     std::string tmpDst = ui->dstMacEdit->text().toStdString();
+    uint16_t etherType = ui->etherTypeEdit->text().toInt(NULL, 16);
+    std::string l2payload = ui->l2payloadEdit->toPlainText().toStdString();
+    int length = ceil((int)l2payload.length()/2.0);
+    qDebug () << "length: " << length;
+    uint8_t *l2PayloadHex = new uint8_t [length];
+    int index = 0;
+
+    for (int i = 0; i < (int)l2payload.length()-1; i+=2) {
+        // TODO: need to do error checking here
+        // the contents of l2payloadEdit are in HEX, meaning that 2 characters make 1 Byte
+        l2PayloadHex[index] = (uint8_t)strtoul(l2payload.substr(i, 2).c_str(), NULL, 16);
+        qDebug() << "index: " << index << "\tl2PayloadHex str: " << l2payload.substr(i, 2).c_str();
+        qDebug() << "l2PayloadHex: " << l2PayloadHex[index];
+        index++;
+    }
+
+    if ((int)l2payload.length() % 2 == 1) {
+        uint16_t tmp = (uint16_t)strtoul(l2payload.substr(l2payload.length()-1, 1).c_str(), NULL, 16);
+        l2PayloadHex[index] = tmp<<4;
+        qDebug() << "index: " << index << "\tl2PayloadHex str: " << tmp;
+        qDebug() << "l2PayloadHex: " << l2PayloadHex[index];
+
+    }
+
 
     // for some reason, unless the functions below run qDebug(), it does not work
 /*    if (Utilities::checkMacAddress(tmpSrc)) {
@@ -56,20 +80,25 @@ void MainWindow::sendFrame() {
     Utilities::intToMacAddress(Utilities::stringToInt(tmpSrc), srcMacA);
     Utilities::intToMacAddress(Utilities::stringToInt(tmpDst), dstMacA);
 
-
     qDebug() << srcMacA[0] << " " << srcMacA[1] << " " << srcMacA[2] << " "
              << srcMacA[3] << " " << srcMacA[4] << " " << srcMacA[5] << " ";
     qDebug() << dstMacA[0] << " " << dstMacA[1] << " " << dstMacA[2] << " "
              << dstMacA[3] << " " << dstMacA[4] << " " << dstMacA[5] << " ";
+    qDebug() << etherType;
+
 
 
     int sockfd;
     struct ifreq if_idx;
     struct ifreq if_mac;
     int tx_len = 0;
-    char sendbuf[BUF_SIZ];
-    struct ether_header *eh = (struct ether_header *) sendbuf;
-    struct iphdr *iph = (struct iphdr *) (sendbuf + sizeof(struct ether_header));
+    // 14 is the max size of header on Ethernet II
+    L2Helper *testL2 = new L2Helper(14+length);
+    testL2->setPayload(l2PayloadHex, length);
+
+//    struct ether_header *eh = (struct ether_header *) sendbuf;
+
+//    struct iphdr *iph = (struct iphdr *) (sendbuf + sizeof(struct ether_header));
     struct sockaddr_ll socket_address;
     char ifName[IFNAMSIZ];
 
@@ -87,45 +116,20 @@ void MainWindow::sendFrame() {
     /* Get the index of the interface to send on */
     memset(&if_idx, 0, sizeof(struct ifreq));
     strncpy(if_idx.ifr_name, ifName, IFNAMSIZ-1);
-    if (ioctl(sockfd, SIOCGIFINDEX, &if_idx) < 0)
-        perror("SIOCGIFINDEX");
+    if (ioctl(sockfd, SIOCGIFINDEX, &if_idx) < 0) { perror("SIOCGIFINDEX"); }
 
     /* Get the MAC address of the interface to send on */
     memset(&if_mac, 0, sizeof(struct ifreq));
     strncpy(if_mac.ifr_name, ifName, IFNAMSIZ-1);
-    if (ioctl(sockfd, SIOCGIFHWADDR, &if_mac) < 0)
-        perror("SIOCGIFHWADDR");
-
-    /* Construct the Ethernet header */
-    memset(sendbuf, 0, BUF_SIZ);
-
-    // source MAC address
-    eh->ether_shost[0] = srcMacA[0];
-    eh->ether_shost[1] = srcMacA[1];
-    eh->ether_shost[2] = srcMacA[2];
-    eh->ether_shost[3] = srcMacA[3];
-    eh->ether_shost[4] = srcMacA[4];
-    eh->ether_shost[5] = srcMacA[5];
-
-    // destination MAC address
-    eh->ether_dhost[0] = dstMacA[0];
-    eh->ether_dhost[1] = dstMacA[1];
-    eh->ether_dhost[2] = dstMacA[2];
-    eh->ether_dhost[3] = dstMacA[3];
-    eh->ether_dhost[4] = dstMacA[4];
-    eh->ether_dhost[5] = dstMacA[5];
+    if (ioctl(sockfd, SIOCGIFHWADDR, &if_mac) < 0) { perror("SIOCGIFHWADDR"); }
 
 
-    /* Ethertype field */
-    eh->ether_type = htons(ETH_P_IP);
+    // set L2 header fields
+    testL2->setSrcMac(srcMacA);
+    testL2->setDstMac(dstMacA);
+    testL2->setEtherType(etherType);  // function in L2Helper does htons()
+    tx_len += sizeof(struct ether_header) + testL2->getPayloadSize();   // transmission length
 
-    tx_len += sizeof(struct ether_header);
-
-    /* Packet data */
-    sendbuf[tx_len++] = 0xde;
-    sendbuf[tx_len++] = 0xad;
-    sendbuf[tx_len++] = 0xbe;
-    sendbuf[tx_len++] = 0xef;
 
     /* Index of the network device */
     socket_address.sll_ifindex = if_idx.ifr_ifindex;
@@ -135,23 +139,26 @@ void MainWindow::sendFrame() {
 
     /* Destination MAC */
     // this is the one that actually matters, it shows up in the frame header
-    socket_address.sll_addr[0] = dstMacA[0];
-    socket_address.sll_addr[1] = dstMacA[1];
-    socket_address.sll_addr[2] = dstMacA[2];
-    socket_address.sll_addr[3] = dstMacA[3];
-    socket_address.sll_addr[4] = dstMacA[4];
-    socket_address.sll_addr[5] = dstMacA[5];
+    socket_address.sll_addr[0] = testL2->getDstMac()[0];
+    socket_address.sll_addr[1] = testL2->getDstMac()[1];
+    socket_address.sll_addr[2] = testL2->getDstMac()[2];
+    socket_address.sll_addr[3] = testL2->getDstMac()[3];
+    socket_address.sll_addr[4] = testL2->getDstMac()[4];
+    socket_address.sll_addr[5] = testL2->getDstMac()[5];
 
 
     /* Send packet */
-    if (sendto(sockfd, sendbuf, tx_len, 0, (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll)) < 0)
-    printf("Send failed\n");
+    int bytesSent = sendto(sockfd, testL2->getSendbuf(), tx_len, 0
+                           , (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll));
+//    if (sendto(sockfd, sendbuf, tx_len, 0, (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll)) < 0)
+    if (bytesSent < 0) { printf("Send failed\n"); }
 
-    qDebug() << "SENT FRAME";
+    qDebug() << "SENT FRAME, bytesSent: " << bytesSent;
 
 
     delete srcMacA;
     delete dstMacA;
+//    delete testL2;    // check what is happening with pointers here
 
 }
 
@@ -175,8 +182,6 @@ void MainWindow::macAddressTableTest() {
     struct ifreq if_mac;
     int tx_len = 0;
     char sendbuf[BUF_SIZ];
-
-    L2Helper *test = new L2Helper();
 
     struct ether_header *eh = (struct ether_header *) sendbuf;
     struct iphdr *iph = (struct iphdr *) (sendbuf + sizeof(struct ether_header));
@@ -280,3 +285,4 @@ void MainWindow::on_runMacTableButton_clicked() {
     macAddressTableTest();
 
 }
+

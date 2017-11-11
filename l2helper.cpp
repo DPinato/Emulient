@@ -1,14 +1,17 @@
 #include "l2helper.h"
 
-L2Helper::L2Helper() {
+L2Helper::L2Helper(int length) {
 
+    sendbuf = new char [length];
     eh = (struct ether_header *) sendbuf;
     srcMac = new uint8_t [6];
     dstMac = new uint8_t [6];
+    frameSize = 14; // minimum header size for Ethernet II
 
 }
 
 L2Helper::~L2Helper() {
+    delete sendbuf;
     delete eh;
     delete srcMac;
     delete dstMac;
@@ -40,18 +43,43 @@ void L2Helper::setEtherType(uint16_t eType) {
     eh->ether_type = htons(eType);
 }
 
+void L2Helper::setPayload(uint8_t *data, int size) {
+    payload = new uint8_t [size];
+    payload = (uint8_t*)data;
+    payloadSize = size;
+    frameSize += payloadSize;
+    memcpy(&sendbuf[14], payload, payloadSize);
+
+}
+
 ether_header *L2Helper::getEtherHeader() {
     return eh;
 }
 
 uint8_t *L2Helper::getSrcMac() {
-
+    return srcMac;
 }
 
 uint8_t *L2Helper::getDstMac() {
-
+    return dstMac;
 }
 
 uint16_t L2Helper::getEtherType() {
+    return eh->ether_type;
+}
 
+char *L2Helper::getSendbuf() {
+    return sendbuf;
+}
+
+uint8_t *L2Helper::getPayload() {
+    return payload;
+}
+
+int L2Helper::getFrameSize() {
+    return frameSize;
+}
+
+int L2Helper::getPayloadSize() {
+    return payloadSize;
 }
