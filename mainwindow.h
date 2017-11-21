@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <net/if.h>
 #include <netinet/ether.h>
+#include <netinet/ip.h>
 
 #include <string>
 #include <new>
@@ -23,8 +24,10 @@
 
 #include "utilities.h"
 #include "l2helper.h"
+#include "l3helper.h"
 
 class L2Helper;
+class L3Helper;
 
 
 #define DEFAULT_IF	"eth0"
@@ -37,26 +40,22 @@ class MainWindow;
 
 class MainWindow : public QMainWindow
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+	explicit MainWindow(QWidget *parent = 0);
+	~MainWindow();
 
 private slots:
-    void on_sendButton_clicked();
-    void on_runMacTableButton_clicked();
+	void on_sendButton_clicked();
+	void on_runMacTableButton_clicked();
 
-    void sendFrame();
-    void macAddressTableTest();
+	void sendFrame();
+	void macAddressTableTest();
 
 private:
-    Ui::MainWindow *ui;
+	Ui::MainWindow *ui;
 
-    // handle MAC addresses as 48-bit unsigned int
-    // the Utilities class allows for conversions
-    uint64_t srcMac;
-    uint64_t dstMac;
 
 };
 

@@ -29,12 +29,14 @@ SOURCES += \
 main.cpp \
 mainwindow.cpp \
 utilities.cpp \
-    l2helper.cpp
+    l2helper.cpp \
+    l3helper.cpp
 
 HEADERS += \
 mainwindow.h \
 utilities.h \
-    l2helper.h
+    l2helper.h \
+    l3helper.h
 
 FORMS += \
 mainwindow.ui
