@@ -8,6 +8,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->setupUi(this);
 	QMainWindow::setWindowTitle("Emulient");
 
+
+	// initialise UI
+
+	on_l2PayloadCheckBox_clicked(false);
+
 /*
 	uint64_t test = Utilities::stringToInt("0E:DC:BA:98:76:54");
 	qDebug() << QString::number(test, 16) << "\t" << test;
@@ -26,8 +31,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 
-
-
 }
 
 MainWindow::~MainWindow() {
@@ -43,45 +46,23 @@ void MainWindow::sendFrame() {
 
 	std::string tmpSrc = ui->srcMacEdit->text().toStdString();
 	std::string tmpDst = ui->dstMacEdit->text().toStdString();
-	uint16_t etherType = ui->etherTypeEdit->text().toInt(NULL, 16);
+	uint16_t etherType = ui->etherTypeEdit->text().toUInt(NULL, 16);
+	uint8_t *srcMacA = new uint8_t [6];
+	uint8_t *dstMacA = new uint8_t [6];
 	std::string l2payload = ui->l2payloadEdit->toPlainText().toStdString();
-	int length = ceil((int)l2payload.length()/2.0);
-	qDebug () << "length: " << length;
+
+	int length = 0;
+	if (ui->l2PayloadCheckBox->isChecked()) {
+		length = ceil((int)l2payload.length()/2.0);
+	} else {
+		length = 20;
+	}
 	uint8_t *l2PayloadHex = new uint8_t [length];
 	int index = 0;
 
-	for (int i = 0; i < (int)l2payload.length()-1; i+=2) {
-		// TODO: need to do error checking here
-		// the contents of l2payloadEdit are in HEX, meaning that 2 characters make 1 Byte
-		l2PayloadHex[index] = (uint8_t)strtoul(l2payload.substr(i, 2).c_str(), NULL, 16);
-		qDebug() << "index: " << index << "\tl2PayloadHex str: " << l2payload.substr(i, 2).c_str();
-		qDebug() << "l2PayloadHex: " << l2PayloadHex[index];
-		index++;
-	}
-
-	if ((int)l2payload.length() % 2 == 1) {
-		uint16_t tmp = (uint16_t)strtoul(l2payload.substr(l2payload.length()-1, 1).c_str(), NULL, 16);
-		l2PayloadHex[index] = tmp<<4;
-		qDebug() << "index: " << index << "\tl2PayloadHex str: " << tmp;
-		qDebug() << "l2PayloadHex: " << l2PayloadHex[index];
-
-	}
 
 
-	// for some reason, unless the functions below run qDebug(), it does not work
-/*    if (Utilities::checkMacAddress(tmpSrc)) {
-		qDebug() << "Good src MAC address";
-	}
-	if (Utilities::checkMacAddress(tmpDst)) {
-		qDebug() << "Good dst MAC address";
-	}
-*/
-
-
-
-	uint8_t *srcMacA = new uint8_t [6];
-	uint8_t *dstMacA = new uint8_t [6];
-
+	// get src and dst MAC addresses
 	Utilities::intToMacAddress(Utilities::stringToInt(tmpSrc), srcMacA);
 	Utilities::intToMacAddress(Utilities::stringToInt(tmpDst), dstMacA);
 
@@ -93,36 +74,65 @@ void MainWindow::sendFrame() {
 
 
 
-	int sockfd;
-	struct ifreq if_idx;
-	struct ifreq if_mac;
-	int tx_len = 0;
-
-
-	// L3 STUFF
-	L3Helper *testL3 = new L3Helper(20, 20);
-//	testL3->setTOS(0);
-//	testL3->setTotLength((uint16_t)ui->totLengthEdit->text().toUInt());
-//	testL3->setIdentification((uint16_t)ui->identificationEdit->text().toUInt());
-//	testL3->setFragOffset((uint16_t)ui->fragOffsetEdit->text().toUInt());
-//	testL3->setTTL((uint8_t)ui->ttlEdit->text().toUInt());
-//	testL3->setProtocol((uint8_t)ui->protocolEdit->text().toUInt());
-//	testL3->setChecksum((uint16_t)ui->protocolEdit->text().toUInt());
-//	testL3->setSrcIP(L3Helper::ip4To32bitUint(ui->srcIPEdit->text().toStdString()));
-//	testL3->setDstIP(L3Helper::ip4To32bitUint(ui->dstIPEdit->text().toStdString()));
-
+	L3Helper *testL3 = new L3Helper(length, length);	// options not supported yet
 
 	// set L2 header fields
 	length = testL3->getIHL()*4;
-	L2Helper *testL2 = new L2Helper(14+length);	// 14 is the max size of header on Ethernet II
-//	testL2->setPayload(l2PayloadHex, length);
-	testL2->setPayload((uint8_t *)testL3->getRawHeader(), length);
+	L2Helper *testL2 = new L2Helper(sizeof(struct ether_header)+length);	// will have to change when we put in 802.1Q tags
 	testL2->setSrcMac(srcMacA);
 	testL2->setDstMac(dstMacA);
 	testL2->setEtherType(etherType);  // function in L2Helper does htons()
-	tx_len += sizeof(struct ether_header) + testL2->getPayloadSize();   // transmission length
 
-//    struct ether_header *eh = (struct ether_header *) sendbuf;
+
+	if (ui->l2PayloadCheckBox->isChecked()) {
+		// use what is inside the L2 custom frame box
+		for (int i = 0; i < (int)l2payload.length()-1; i+=2) {
+			// TODO: need to do error checking here
+			// the contents of l2payloadEdit are in HEX, meaning that 2 characters make 1 Byte
+			l2PayloadHex[index] = (uint8_t)strtoul(l2payload.substr(i, 2).c_str(), NULL, 16);
+			qDebug() << "index: " << index << "\tl2PayloadHex str: " << l2payload.substr(i, 2).c_str();
+			qDebug() << "l2PayloadHex: " << l2PayloadHex[index];
+			index++;
+		}
+
+		if ((int)l2payload.length() % 2 == 1) {
+			uint16_t tmp = (uint16_t)strtoul(l2payload.substr(l2payload.length()-1, 1).c_str(), NULL, 16);
+			l2PayloadHex[index] = tmp<<4;
+			qDebug() << "index: " << index << "\tl2PayloadHex str: " << tmp;
+			qDebug() << "l2PayloadHex: " << l2PayloadHex[index];
+		}
+
+		testL2->setPayload(l2PayloadHex, length);
+		qDebug () << "l2PayloadHex length: " << length;
+
+	} else {
+		// use the parameters in the boxes
+		// L3 STUFF
+		testL3->setVersion((uint8_t)ui->verEdit->text().toUInt(NULL, 16));
+		testL3->setIHL((uint8_t)ui->ihlEdit->text().toUInt(NULL, 16));
+		testL3->setDSCP((uint8_t)ui->dscpEdit->text().toUInt(NULL, 16));
+		testL3->setECN((uint8_t)ui->ecnEdit->text().toUInt(NULL, 16));
+		testL3->setTotLength((uint16_t)ui->totLengthEdit->text().toUInt(NULL, 16));
+		testL3->setIdentification((uint16_t)ui->identificationEdit->text().toUInt(NULL, 16));
+		testL3->setFlags((uint16_t)ui->flagsEdit->text().toUInt(NULL, 16));
+		testL3->setFragOffset((uint16_t)ui->fragOffsetEdit->text().toUInt(NULL, 16));
+		testL3->setTTL((uint8_t)ui->ttlEdit->text().toUInt(NULL, 16));
+		testL3->setProtocol((uint8_t)ui->protocolEdit->text().toUInt(NULL, 16));
+		testL3->setChecksum(
+					(uint16_t)ui->checksumEdit->text().toUInt(NULL, 16));
+		testL3->setSrcIP(L3Helper::ip4To32bitUint(ui->srcIPEdit->text().toStdString()));
+		testL3->setDstIP(L3Helper::ip4To32bitUint(ui->dstIPEdit->text().toStdString()));
+
+		testL2->setPayload((uint8_t *)testL3->getRawHeader(), length);
+
+	}
+
+
+
+	// TODO: EVERYTHING BELOW HERE SHOULD BE IN A DIFFERENT CLASS, OR AT LEAST SOMEWHERE ELSE
+	int sockfd;
+	struct ifreq if_idx;
+	struct ifreq if_mac;
 
 //    struct iphdr *iph = (struct iphdr *) (sendbuf + sizeof(struct ether_header));
 	struct sockaddr_ll socket_address;
@@ -149,14 +159,9 @@ void MainWindow::sendFrame() {
 	strncpy(if_mac.ifr_name, ifName, IFNAMSIZ-1);
 	if (ioctl(sockfd, SIOCGIFHWADDR, &if_mac) < 0) { perror("SIOCGIFHWADDR"); }
 
+	socket_address.sll_ifindex = if_idx.ifr_ifindex;	// index of network device
 
-
-
-	/* Index of the network device */
-	socket_address.sll_ifindex = if_idx.ifr_ifindex;
-
-	/* Address length*/
-	socket_address.sll_halen = ETH_ALEN;
+	socket_address.sll_halen = ETH_ALEN;	// address length
 
 	/* Destination MAC */
 	// this is the one that actually matters, it shows up in the frame header
@@ -169,6 +174,7 @@ void MainWindow::sendFrame() {
 
 
 	/* Send packet */
+	int tx_len = sizeof(struct ether_header) + testL2->getPayloadSize();   // transmission length
 	int bytesSent = sendto(sockfd, testL2->getSendbuf(), tx_len, 0
 						   , (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll));
 //    if (sendto(sockfd, sendbuf, tx_len, 0, (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll)) < 0)
@@ -308,3 +314,22 @@ void MainWindow::on_runMacTableButton_clicked() {
 
 }
 
+void MainWindow::on_l2PayloadCheckBox_clicked(bool checked) {
+	// if checked, only show custom L2 payload box, hide all the fields above it
+	ui->l2payloadEdit->setEnabled(checked);
+
+	ui->verEdit->setEnabled(!checked);
+	ui->ihlEdit->setEnabled(!checked);
+	ui->dscpEdit->setEnabled(!checked);
+	ui->ecnEdit->setEnabled(!checked);
+	ui->totLengthEdit->setEnabled(!checked);
+	ui->identificationEdit->setEnabled(!checked);
+	ui->flagsEdit->setEnabled(!checked);
+	ui->fragOffsetEdit->setEnabled(!checked);
+	ui->ttlEdit->setEnabled(!checked);
+	ui->protocolEdit->setEnabled(!checked);
+	ui->checksumEdit->setEnabled(!checked);
+	ui->srcIPEdit->setEnabled(!checked);
+	ui->dstIPEdit->setEnabled(!checked);
+	ui->optionsEdit->setEnabled(false);
+}

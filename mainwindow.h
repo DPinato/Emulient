@@ -53,6 +53,8 @@ private slots:
 	void sendFrame();
 	void macAddressTableTest();
 
+	void on_l2PayloadCheckBox_clicked(bool checked);
+
 private:
 	Ui::MainWindow *ui;
 

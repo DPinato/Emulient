@@ -18,12 +18,21 @@ public:
 
 
 	// set
-	void setIPVersion(uint8_t v);	// IP version
-	void setIHL(uint8_t l);			// Internet header length
-	void setTOS(uint8_t t);			// DSCP + ECN
+	void setVersion(uint8_t v);	// version
+	void setIHL(uint8_t l);		// Internet header length
+//	void setTOS(uint8_t t);		// DSCP + ECN, I am just going to separate DSCP and ECN
+
+	void setDSCP(uint8_t d);	// DSCP, 6 bits
+	void setECN(uint8_t e);		// ECN, 2 bits
+
 	void setTotLength(uint16_t l);	// total length of entire packet, header + data
 	void setIdentification(uint16_t i);		// id
-	void setFragOffset(uint16_t f);	// flags + fragment offset
+
+//	void setFragOffset(uint16_t f);	// flags + fragment offset, separate this
+	void setFlags(uint16_t f);		// flags, 3 bits
+	void setFragOffset(uint16_t f);	// fragment offset, 15 bits
+
+
 	void setTTL(uint8_t t);
 	void setProtocol(uint8_t p);
 	void setChecksum(uint16_t c);
