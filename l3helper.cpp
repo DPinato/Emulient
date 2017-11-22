@@ -9,11 +9,9 @@ L3Helper::L3Helper(int headerLength, int totalLength) {
 	iph = (struct iphdr *) sendbuf;
 
 	version = 4;	// by default, do IPv4
-//	ihl = 5;		// default value is 5, when no IP options are in the header
-	ihl = totalLength/4;		// default value is 5, when no IP options are in the header
+	ihl = headerLength/4;		// default value is 5, when no IP options are in the header
 	sendbuf[0] = (version<<4) + ihl;
-
-	qDebug() << "sendbuf[0]: " << (uint8_t)sendbuf[0];
+//	qDebug() << "sendbuf[0]: " << (uint8_t)sendbuf[0];
 
 }
 
@@ -150,7 +148,60 @@ std::string L3Helper::uintToIp4Str(uint32_t ip) {
 
 }
 
-void L3Helper::computeChecksum() {
+uint16_t L3Helper::computeIPv4Checksum() {
+	// compute IPv4 checksum according to header
+	// note that this will likely fail if some of the values are simply not present
+	// (different from values not being set properly, maybe header buffer is not allocated properly?)
+	qDebug() << "computeIPv4Checksum()";
+	uint32_t tmp = 0;	// this cannot be only 16-bits, since it needs to carry over left-most bits
+	uint16_t header[ihl*2];	// collect header valued in 16-bit uint format
+
+	for (int i = 0; i < ihl*4; i+=2) {
+		// the IPv4 header size should always be divisible by 4 Bytes
+		// do not sum the checksum field itself
+		if (i != 10 && i!=11) {
+			header[i/2] = ((uint8_t)sendbuf[i]<<8) + (uint8_t)sendbuf[i+1];
+			tmp += header[i/2];	// sum all the 16-bit values
+		}
+		qDebug() << i << "\theader[i]: " << QString::number(header[i/2], 16);
+	}
+	qDebug() << "sum: " << QString::number(tmp, 16);
+
+	// carry over any left-most bits above bit 15 (right-most bit is bit zero)
+	tmp = (tmp&0xFFFF) + (tmp>>16);
+	while (tmp >0xFFFF) {
+		// there is a double carry, do the above again
+		tmp = (tmp&0xFFFF) + (tmp>>16);
+	}
+
+	qDebug() << QString::number(~(uint16_t)tmp, 16);
+	return ~(uint16_t)tmp;	// final operation is a NOT
+
+}
+
+uint16_t L3Helper::verifyIPv4Checksum() {
+	// check whether IPv4 headerchecksum of this header is correct
+	// returns 0 if correct, any other number otherwise
+	// TODO: this looks awfully close to computeIPv4Checksum(), can you do anything about that?
+	qDebug() << "verifyIPv4Checksum()";
+	uint32_t tmp = 0;	// this cannot be only 16-bits, since it needs to carry over left-most bits
+	uint16_t header[ihl*2];	// collect header valued in 16-bit uint format
+
+	for (int i = 0; i < ihl*4; i+=2) {
+		// the IPv4 header size should always be divisible by 4 Bytes
+		// DO sum the checksum field itself
+		header[i/2] = ((uint8_t)sendbuf[i]<<8) + (uint8_t)sendbuf[i+1];
+		tmp += header[i/2];	// sum all the 16-bit values
+	}
+
+	// carry over any left-most bits above bit 15 (right-most bit is bit zero)
+	tmp = (tmp&0xFFFF) + (tmp>>16);
+	while (tmp >0xFFFF) {
+		// there is a double carry, do the above again
+		tmp = (tmp&0xFFFF) + (tmp>>16);
+	}
+
+	return ~(uint16_t)tmp;	// final operation is a NOT
 
 }
 

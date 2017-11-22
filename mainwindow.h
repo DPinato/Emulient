@@ -52,12 +52,32 @@ private slots:
 
 	void sendFrame();
 	void macAddressTableTest();
+	void updateIPv4Checksum();
 
 	void on_l2PayloadCheckBox_clicked(bool checked);
+	void on_autoComputeCheckBox_clicked(bool checked);
+	void on_verEdit_editingFinished();
+	void on_ihlEdit_editingFinished();
+	void on_dscpEdit_editingFinished();
+	void on_ecnEdit_editingFinished();
+	void on_totLengthEdit_editingFinished();
+	void on_identificationEdit_editingFinished();
+	void on_flagsEdit_editingFinished();
+	void on_fragOffsetEdit_editingFinished();
+	void on_ttlEdit_editingFinished();
+	void on_protocolEdit_editingFinished();
+	void on_checksumEdit_editingFinished();
+	void on_srcIPEdit_editingFinished();
+	void on_dstIPEdit_editingFinished();
 
 private:
 	Ui::MainWindow *ui;
 
+	// these are used for the main tab widget "Raw Frame"
+	L2Helper *testL2;
+	L3Helper *testL3;
+
+	int length;		// size of Layer 2 payload
 
 };
 

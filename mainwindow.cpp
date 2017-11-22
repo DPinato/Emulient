@@ -6,13 +6,15 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
+	ui->statusBar->setSizeGripEnabled(false);	// this does not seem to be working on Ubuntu
 	QMainWindow::setWindowTitle("Emulient");
 
 
 	// initialise UI
-
 	on_l2PayloadCheckBox_clicked(false);
 
+
+	// there is going to be some debug stuff here, since this function runs immediately when the program starts
 /*
 	uint64_t test = Utilities::stringToInt("0E:DC:BA:98:76:54");
 	qDebug() << QString::number(test, 16) << "\t" << test;
@@ -29,6 +31,43 @@ MainWindow::MainWindow(QWidget *parent) :
 
 */
 
+	qDebug() << "checksum test";
+
+	// test IPv4 checksum auto-compute
+	std::string l2payload = ui->l2payloadEdit->toPlainText().toStdString();
+
+	if (ui->l2PayloadCheckBox->isChecked()) {
+		length = ceil((int)l2payload.length()/2.0);
+	} else {
+		length = 20;
+	}
+
+	testL3 = new L3Helper(length, length);	// options not supported yet
+	length = testL3->getIHL()*4;
+	testL2 = new L2Helper(sizeof(struct ether_header)+length);	// will have to change when we put in 802.1Q tags
+
+
+	testL3->setVersion((uint8_t)ui->verEdit->text().toUInt(NULL, 16));
+	testL3->setIHL((uint8_t)ui->ihlEdit->text().toUInt(NULL, 16));
+	testL3->setDSCP((uint8_t)ui->dscpEdit->text().toUInt(NULL, 16));
+	testL3->setECN((uint8_t)ui->ecnEdit->text().toUInt(NULL, 16));
+	testL3->setTotLength((uint16_t)ui->totLengthEdit->text().toUInt(NULL, 16));
+	testL3->setIdentification((uint16_t)ui->identificationEdit->text().toUInt(NULL, 16));
+	testL3->setFlags((uint16_t)ui->flagsEdit->text().toUInt(NULL, 16));
+	testL3->setFragOffset((uint16_t)ui->fragOffsetEdit->text().toUInt(NULL, 16));
+	testL3->setTTL((uint8_t)ui->ttlEdit->text().toUInt(NULL, 16));
+	testL3->setProtocol((uint8_t)ui->protocolEdit->text().toUInt(NULL, 16));
+//	testL3->setChecksum((uint16_t)ui->checksumEdit->text().toUInt(NULL, 16));
+	testL3->setSrcIP(L3Helper::ip4To32bitUint(ui->srcIPEdit->text().toStdString()));
+	testL3->setDstIP(L3Helper::ip4To32bitUint(ui->dstIPEdit->text().toStdString()));
+
+
+	qDebug() << "checksum: " << testL3->computeIPv4Checksum();
+
+	ui->autoComputeCheckBox->setChecked(true);
+	on_autoComputeCheckBox_clicked(true);
+	qDebug() << "verify checksum: " << testL3->verifyIPv4Checksum();
+
 
 
 }
@@ -43,7 +82,6 @@ void MainWindow::on_sendButton_clicked() {
 
 void MainWindow::sendFrame() {
 	// send frame using the src and dst MAC address from GUI
-
 	std::string tmpSrc = ui->srcMacEdit->text().toStdString();
 	std::string tmpDst = ui->dstMacEdit->text().toStdString();
 	uint16_t etherType = ui->etherTypeEdit->text().toUInt(NULL, 16);
@@ -51,12 +89,7 @@ void MainWindow::sendFrame() {
 	uint8_t *dstMacA = new uint8_t [6];
 	std::string l2payload = ui->l2payloadEdit->toPlainText().toStdString();
 
-	int length = 0;
-	if (ui->l2PayloadCheckBox->isChecked()) {
-		length = ceil((int)l2payload.length()/2.0);
-	} else {
-		length = 20;
-	}
+
 	uint8_t *l2PayloadHex = new uint8_t [length];
 	int index = 0;
 
@@ -74,11 +107,8 @@ void MainWindow::sendFrame() {
 
 
 
-	L3Helper *testL3 = new L3Helper(length, length);	// options not supported yet
 
 	// set L2 header fields
-	length = testL3->getIHL()*4;
-	L2Helper *testL2 = new L2Helper(sizeof(struct ether_header)+length);	// will have to change when we put in 802.1Q tags
 	testL2->setSrcMac(srcMacA);
 	testL2->setDstMac(dstMacA);
 	testL2->setEtherType(etherType);  // function in L2Helper does htons()
@@ -118,8 +148,7 @@ void MainWindow::sendFrame() {
 		testL3->setFragOffset((uint16_t)ui->fragOffsetEdit->text().toUInt(NULL, 16));
 		testL3->setTTL((uint8_t)ui->ttlEdit->text().toUInt(NULL, 16));
 		testL3->setProtocol((uint8_t)ui->protocolEdit->text().toUInt(NULL, 16));
-		testL3->setChecksum(
-					(uint16_t)ui->checksumEdit->text().toUInt(NULL, 16));
+		testL3->setChecksum((uint16_t)ui->checksumEdit->text().toUInt(NULL, 16));
 		testL3->setSrcIP(L3Helper::ip4To32bitUint(ui->srcIPEdit->text().toStdString()));
 		testL3->setDstIP(L3Helper::ip4To32bitUint(ui->dstIPEdit->text().toStdString()));
 
@@ -309,6 +338,24 @@ void MainWindow::macAddressTableTest() {
 
 }
 
+void MainWindow::updateIPv4Checksum() {
+	// if the IPv4 checksum checkbox is checked, also recompute checksum
+	// if it is not, only verify the checksum in the lineEdit, highlight it if it is incorrect
+	if (ui->autoComputeCheckBox->isChecked()) {
+		testL3->setChecksum(testL3->computeIPv4Checksum());
+		ui->checksumEdit->setText(QString::number(htons(testL3->getIPHeader()->check), 16));
+	}
+
+	qDebug() << "updateIPv4Checksum()\t" << testL3->verifyIPv4Checksum();
+	if (testL3->verifyIPv4Checksum() != 0) {
+		// checksum incorrect, show in the GUI just in case
+		ui->checksumEdit->setStyleSheet("QLineEdit#checksumEdit{color:red}");
+	} else {
+		ui->checksumEdit->setStyleSheet("QLineEdit#checksumEdit{color:black}");
+	}
+
+}
+
 void MainWindow::on_runMacTableButton_clicked() {
 	macAddressTableTest();
 
@@ -332,4 +379,91 @@ void MainWindow::on_l2PayloadCheckBox_clicked(bool checked) {
 	ui->srcIPEdit->setEnabled(!checked);
 	ui->dstIPEdit->setEnabled(!checked);
 	ui->optionsEdit->setEnabled(false);
+}
+
+void MainWindow::on_autoComputeCheckBox_clicked(bool checked) {
+	// Layer 3 checksum needs to be autocomputed, put in the box and in the L3Helper object
+	// whenever a L3 header field is changed, checksum needs to be recomputed
+	ui->checksumEdit->setEnabled(!checked);
+	updateIPv4Checksum();
+
+}
+
+void MainWindow::on_verEdit_editingFinished() {
+	// make sure L3 header checksum if recomputed
+	testL3->setVersion((uint8_t)ui->verEdit->text().toUInt(NULL, 16));
+	updateIPv4Checksum();
+}
+
+
+void MainWindow::on_ihlEdit_editingFinished() {
+	// make sure L3 header checksum if recomputed
+	testL3->setIHL((uint8_t)ui->ihlEdit->text().toUInt(NULL, 16));
+	updateIPv4Checksum();
+}
+
+void MainWindow::on_dscpEdit_editingFinished() {
+	// make sure L3 header checksum if recomputed
+	testL3->setDSCP((uint8_t)ui->dscpEdit->text().toUInt(NULL, 16));
+	updateIPv4Checksum();
+}
+
+void MainWindow::on_ecnEdit_editingFinished() {
+	// make sure L3 header checksum if recomputed
+	testL3->setECN((uint8_t)ui->ecnEdit->text().toUInt(NULL, 16));
+	updateIPv4Checksum();
+}
+
+void MainWindow::on_totLengthEdit_editingFinished() {
+	// make sure L3 header checksum if recomputed
+	testL3->setTotLength((uint16_t)ui->totLengthEdit->text().toUInt(NULL, 16));
+	updateIPv4Checksum();
+}
+
+void MainWindow::on_identificationEdit_editingFinished() {
+	// make sure L3 header checksum if recomputed
+	testL3->setIdentification((uint16_t)ui->identificationEdit->text().toUInt(NULL, 16));
+	updateIPv4Checksum();
+}
+
+void MainWindow::on_flagsEdit_editingFinished() {
+	// make sure L3 header checksum if recomputed
+	testL3->setFlags((uint16_t)ui->flagsEdit->text().toUInt(NULL, 16));
+	updateIPv4Checksum();
+}
+
+void MainWindow::on_fragOffsetEdit_editingFinished() {
+	// make sure L3 header checksum if recomputed
+	testL3->setFragOffset((uint16_t)ui->fragOffsetEdit->text().toUInt(NULL, 16));
+	updateIPv4Checksum();
+}
+
+void MainWindow::on_ttlEdit_editingFinished() {
+	// make sure L3 header checksum if recomputed
+	testL3->setChecksum(testL3->computeIPv4Checksum());
+	testL3->setTTL((uint8_t)ui->ttlEdit->text().toUInt(NULL, 16));
+}
+
+void MainWindow::on_protocolEdit_editingFinished() {
+	// make sure L3 header checksum if recomputed
+	testL3->setProtocol((uint8_t)ui->protocolEdit->text().toUInt(NULL, 16));
+	updateIPv4Checksum();
+}
+
+void MainWindow::on_checksumEdit_editingFinished() {
+	// check if the checksum is ok, otherwise
+	testL3->setChecksum((uint16_t)ui->checksumEdit->text().toUInt(NULL, 16));
+	updateIPv4Checksum();
+}
+
+void MainWindow::on_srcIPEdit_editingFinished() {
+	// make sure L3 header checksum if recomputed
+	testL3->setSrcIP(L3Helper::ip4To32bitUint(ui->srcIPEdit->text().toStdString()));
+	updateIPv4Checksum();
+}
+
+void MainWindow::on_dstIPEdit_editingFinished() {
+	// make sure L3 header checksum if recomputed
+	testL3->setDstIP(L3Helper::ip4To32bitUint(ui->dstIPEdit->text().toStdString()));
+	updateIPv4Checksum();
 }

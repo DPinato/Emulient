@@ -18,7 +18,7 @@ public:
 
 
 	// set
-	void setVersion(uint8_t v);	// version
+	void setVersion(uint8_t v);	// version1
 	void setIHL(uint8_t l);		// Internet header length
 //	void setTOS(uint8_t t);		// DSCP + ECN, I am just going to separate DSCP and ECN
 
@@ -49,7 +49,8 @@ public:
 	// other
 	static uint32_t ip4To32bitUint(std::string ip);
 	static std::string uintToIp4Str(uint32_t ip);
-	void computeChecksum();
+	uint16_t computeIPv4Checksum();
+	uint16_t verifyIPv4Checksum();
 
 
 	// debug
@@ -61,6 +62,8 @@ private:
 
 	struct iphdr *iph;
 
+	// I don't remember exactly why I decided to put these here
+	// I think its because the iphdr struct does not have an entry for version
 	uint8_t version;
 	uint8_t ihl;
 
