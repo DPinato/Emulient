@@ -25,6 +25,9 @@ public:
 	void setEtherType(uint16_t eType);
 	void setPayload(uint8_t *data, int size);
 
+	void setDot1qHeader(uint16_t tpid, uint8_t pcp, uint8_t dei, uint16_t vlanID);
+
+
 	// GET
 	ether_header *getEtherHeader();
 	uint8_t *getSrcMac();
@@ -35,10 +38,17 @@ public:
 	int getFrameSize();
 	int getPayloadSize();
 
+	uint16_t getTpid();
+	uint8_t getPcp();
+	uint8_t getDei();
+	uint16_t getVlanID();
+
+
 private:
 	uint8_t *sendbuf;		// complete L2 frame, header + payload
 
 	uint8_t *l2Payload;	// payload of the L2 frame, this is closer to binary
+	int headerSize;		// makes it easy when 802.1Q is used
 	int payloadSize;	// size of payload, L2 payload
 	int frameSize;		// size of the whole frame, L2 header + L2 payload
 
@@ -49,6 +59,13 @@ private:
 
 	uint64_t srcMacInt; // store MAC address as a 48-bit uint
 	uint64_t dstMacInt;
+
+	// for 802.1Q header
+	uint16_t tpid;		// 16 bits
+	uint8_t pcp;		// 3 bits
+	uint8_t dei;		// 1 bit
+	uint16_t vlanID;	// 12 bits
+
 };
 
 #endif // L2HELPER_H

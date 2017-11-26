@@ -10,10 +10,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow::setWindowTitle("Emulient");
 
 
-	// initialise UI
-	on_l2PayloadCheckBox_clicked(false);
-
-
 	// there is going to be some debug stuff here, since this function runs immediately when the program starts
 /*
 	uint64_t test = Utilities::stringToInt("0E:DC:BA:98:76:54");
@@ -31,8 +27,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 */
 
-	ui->l2PayloadCheckBox->setChecked(true);
-	on_l2PayloadCheckBox_clicked(true);
 
 	if (ui->l2PayloadCheckBox->isChecked()) {
 		std::string l2payload = ui->l2payloadEdit->toPlainText().toStdString();
@@ -42,7 +36,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	}
 
 	testL3 = new L3Helper(length);	// options not supported yet
-//	length = testL3->getIHL()*4;
 	testL2 = new L2Helper(sizeof(struct ether_header)+length);	// will have to change when we put in 802.1Q tags and L3 payload
 
 
@@ -62,12 +55,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 	qDebug() << "checksum: " << testL3->computeIPv4Checksum();
-
-	ui->autoComputeCheckBox->setChecked(true);
-	on_autoComputeCheckBox_clicked(true);
 	qDebug() << "verify checksum: " << testL3->verifyIPv4Checksum();
 
 
+	// initialise GUI
+	ui->autoComputeCheckBox->setChecked(true);
+	on_autoComputeCheckBox_clicked(true);
+	on_dot1qCheckBox_clicked(false);
+	on_l2PayloadCheckBox_clicked(false);
+	on_l3PayloadCheckBox_clicked(false);
 
 }
 
@@ -96,11 +92,11 @@ void MainWindow::sendFrame() {
 	Utilities::intToMacAddress(Utilities::stringToInt(tmpSrc), srcMacA);
 	Utilities::intToMacAddress(Utilities::stringToInt(tmpDst), dstMacA);
 
-	qDebug() << srcMacA[0] << " " << srcMacA[1] << " " << srcMacA[2] << " "
-			 << srcMacA[3] << " " << srcMacA[4] << " " << srcMacA[5] << " ";
-	qDebug() << dstMacA[0] << " " << dstMacA[1] << " " << dstMacA[2] << " "
-			 << dstMacA[3] << " " << dstMacA[4] << " " << dstMacA[5] << " ";
-	qDebug() << etherType;
+//	qDebug() << srcMacA[0] << " " << srcMacA[1] << " " << srcMacA[2] << " "
+//			 << srcMacA[3] << " " << srcMacA[4] << " " << srcMacA[5] << " ";
+//	qDebug() << dstMacA[0] << " " << dstMacA[1] << " " << dstMacA[2] << " "
+//			 << dstMacA[3] << " " << dstMacA[4] << " " << dstMacA[5] << " ";
+//	qDebug() << etherType;
 
 
 
@@ -108,6 +104,15 @@ void MainWindow::sendFrame() {
 	testL2->setSrcMac(srcMacA);
 	testL2->setDstMac(dstMacA);
 	testL2->setEtherType(etherType);  // function in L2Helper does htons()
+
+	if (ui->dot1qCheckBox->isChecked()) {
+		testL2->setDot1qHeader((uint16_t)ui->tpidEdit->text().toUInt(NULL, 16),
+							   (uint8_t)ui->pcpEdit->text().toUInt(NULL, 16),
+							   (uint8_t)ui->deiEdit->text().toUInt(NULL, 16),
+							   (uint16_t)ui->vlanTagEdit->text().toUInt(NULL, 16));
+	}
+
+
 
 
 	if (ui->l2PayloadCheckBox->isChecked()) {
@@ -181,7 +186,6 @@ void MainWindow::sendFrame() {
 			}
 
 
-
 			qDebug() << "l3_length: " << l3_length;
 			testL3->setL3Payload(l3PayloadHex, l3_length);	// put L3 payload in the L3Helper
 			delete l3PayloadHex;
@@ -190,19 +194,27 @@ void MainWindow::sendFrame() {
 			// for some reason testL3->getL3PayloadSize() causes the segfault here was "fixed"
 			// it was happening between here and L3Helper::setL3PayloadSize()
 
-
 		}
 
-
 		int l2PayloadSize = testL3->getL3PayloadSize() + testL3->getIHL()*4;
-		qDebug() << "l2PayloadSize: " << l2PayloadSize;
 		testL2->setPayload((uint8_t *)testL3->getSendbuf(), l2PayloadSize);
+		qDebug() << "l2PayloadSize: " << l2PayloadSize;
+		qDebug() << "testL2->getPayloadSize(): " << testL2->getPayloadSize();
+	}
+
+
+	qDebug() << "frame size: " << testL2->getFrameSize();
+
+	for (int i = 0; i < testL2->getFrameSize(); i+=4) {
+		qDebug() << QString::number(testL2->getSendbuf()[i], 16) << "\t"
+				 << QString::number(testL2->getSendbuf()[i+1], 16) << "\t"
+				 << QString::number(testL2->getSendbuf()[i+2], 16) << "\t"
+				 << QString::number(testL2->getSendbuf()[i+3], 16);
 
 	}
 
 
-
-	int txLen = sizeof(struct ether_header) + testL2->getPayloadSize();   // transmission length
+	int txLen = testL2->getFrameSize();   // transmission length
 
 	// send frame
 	LinuxSocket *testSock = new LinuxSocket(dstMacA);
@@ -465,4 +477,18 @@ void MainWindow::on_dstIPEdit_editingFinished() {
 	// make sure L3 header checksum if recomputed
 	testL3->setDstIP(L3Helper::ip4To32bitUint(ui->dstIPEdit->text().toStdString()));
 	updateIPv4Checksum();
+}
+
+void MainWindow::on_dot1qCheckBox_clicked(bool checked) {
+	// if checked, allow editing line edits for 802.1Q header
+	ui->tpidEdit->setEnabled(checked);
+	ui->pcpEdit->setEnabled(checked);
+	ui->deiEdit->setEnabled(checked);
+	ui->vlanTagEdit->setEnabled(checked);
+
+}
+
+void MainWindow::on_l3PayloadCheckBox_clicked(bool checked) {
+	// if checked, allow editing the L3 payload text edit
+	ui->l3payloadEdit->setEnabled(checked);
 }
