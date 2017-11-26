@@ -25,9 +25,11 @@
 #include "utilities.h"
 #include "l2helper.h"
 #include "l3helper.h"
+#include "linuxsocket.h"
 
 class L2Helper;
 class L3Helper;
+class LinuxSocket;
 
 
 #define DEFAULT_IF	"eth0"

@@ -1,11 +1,11 @@
 #include "l3helper.h"
 
-L3Helper::L3Helper(int headerLength, int totalLength) {
+L3Helper::L3Helper(int headerLength) {
 	// tos, tot_len, id, frag_off, ttl, protocol, check, saddr, daddr
-	sendbuf = new char [totalLength];	// this holds the whole L3 header + L3 payload
+	sendbuf = new uint8_t [headerLength*sizeof(uint8_t)];	// this holds the whole L3 header + L3 payload
 
 	// initialise sendbuf to 0
-	for (int i = 0; i < totalLength; i++) { sendbuf[i] = 0; }
+	for (int i = 0; i < headerLength; i++) { sendbuf[i] = 0; }
 	iph = (struct iphdr *) sendbuf;
 
 	version = 4;	// by default, do IPv4
@@ -13,6 +13,13 @@ L3Helper::L3Helper(int headerLength, int totalLength) {
 	sendbuf[0] = (version<<4) + ihl;
 //	qDebug() << "sendbuf[0]: " << (uint8_t)sendbuf[0];
 
+	payloadSize = 0;	// initialise
+
+}
+
+L3Helper::~L3Helper() {
+	delete sendbuf;
+	delete l3Payload;
 }
 
 void L3Helper::setVersion(uint8_t v) {
@@ -91,11 +98,37 @@ void L3Helper::setDstIP(uint32_t ip) {
 	iph->daddr = htonl(ip);
 }
 
+void L3Helper::setL3PayloadSize(int size) {
+	// reallocate sendbuf to include header + payload
+	qDebug() << "setL3PayloadSize, size: " << size;
+
+	int tmpSize = sizeof(uint8_t)*((ihl*4)+size);
+	sendbuf = (uint8_t *)realloc(sendbuf, tmpSize);
+	if (sendbuf == NULL) {
+		std::cerr << "Unable to reallocate in L3Helper::setL3PayloadSize, tmpSize: " << tmpSize;
+	}
+
+//	for (int i = 0; i < size; i++) { qDebug() << "i: " << i << "\t" << l3Payload[i]; }
+
+	// copy l3Payload in sendbuf
+	memcpy(&sendbuf[ihl*4*sizeof(uint8_t)], l3Payload, size);
+
+}
+
+void L3Helper::setL3Payload(uint8_t *buf, int size) {
+	qDebug() << "setL3Payload: " << size;
+	payloadSize = size;
+	l3Payload = new uint8_t [payloadSize*sizeof(uint8_t)];
+	memcpy(l3Payload, buf, payloadSize);
+	setL3PayloadSize(payloadSize);
+
+}
+
 struct iphdr *L3Helper::getIPHeader() {
 	return iph;
 }
 
-char *L3Helper::getRawHeader() {
+uint8_t *L3Helper::getSendbuf() {
 	return sendbuf;
 }
 
@@ -105,6 +138,14 @@ uint8_t L3Helper::getVersion() {
 
 uint8_t L3Helper::getIHL() {
 	return ihl;
+}
+
+uint8_t *L3Helper::getL3Payload() {
+	return l3Payload;
+}
+
+int L3Helper::getL3PayloadSize() {
+	return payloadSize;
 }
 
 uint32_t L3Helper::ip4To32bitUint(std::string ip) {
@@ -163,9 +204,9 @@ uint16_t L3Helper::computeIPv4Checksum() {
 			header[i/2] = ((uint8_t)sendbuf[i]<<8) + (uint8_t)sendbuf[i+1];
 			tmp += header[i/2];	// sum all the 16-bit values
 		}
-		qDebug() << i << "\theader[i]: " << QString::number(header[i/2], 16);
+//		qDebug() << i << "\theader[i]: " << QString::number(header[i/2], 16);
 	}
-	qDebug() << "sum: " << QString::number(tmp, 16);
+//	qDebug() << "sum: " << QString::number(tmp, 16);
 
 	// carry over any left-most bits above bit 15 (right-most bit is bit zero)
 	tmp = (tmp&0xFFFF) + (tmp>>16);
@@ -208,6 +249,6 @@ uint16_t L3Helper::verifyIPv4Checksum() {
 void L3Helper::showSendBuf(int l) {
 	// show l bytes of sendbuf
 	for (int i = 0; i < l; i++) {
-		qDebug() << (uint8_t)sendbuf[i];
+		qDebug() << sendbuf[i];
 	}
 }

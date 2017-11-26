@@ -30,13 +30,15 @@ main.cpp \
 mainwindow.cpp \
 utilities.cpp \
     l2helper.cpp \
-    l3helper.cpp
+    l3helper.cpp \
+    linuxsocket.cpp
 
 HEADERS += \
 mainwindow.h \
 utilities.h \
     l2helper.h \
-    l3helper.h
+    l3helper.h \
+    linuxsocket.h
 
 FORMS += \
 mainwindow.ui

@@ -31,20 +31,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
 */
 
-	qDebug() << "checksum test";
-
-	// test IPv4 checksum auto-compute
-	std::string l2payload = ui->l2payloadEdit->toPlainText().toStdString();
+	ui->l2PayloadCheckBox->setChecked(true);
+	on_l2PayloadCheckBox_clicked(true);
 
 	if (ui->l2PayloadCheckBox->isChecked()) {
+		std::string l2payload = ui->l2payloadEdit->toPlainText().toStdString();
 		length = ceil((int)l2payload.length()/2.0);
 	} else {
-		length = 20;
+		length = 20;	// options not supported yet
 	}
 
-	testL3 = new L3Helper(length, length);	// options not supported yet
-	length = testL3->getIHL()*4;
-	testL2 = new L2Helper(sizeof(struct ether_header)+length);	// will have to change when we put in 802.1Q tags
+	testL3 = new L3Helper(length);	// options not supported yet
+//	length = testL3->getIHL()*4;
+	testL2 = new L2Helper(sizeof(struct ether_header)+length);	// will have to change when we put in 802.1Q tags and L3 payload
 
 
 	testL3->setVersion((uint8_t)ui->verEdit->text().toUInt(NULL, 16));
@@ -73,6 +72,9 @@ MainWindow::MainWindow(QWidget *parent) :
 }
 
 MainWindow::~MainWindow() {
+//	delete testL2;
+//	delete testL3;	// when these 2 are uncommented, it gives a message of "double free or corruption"
+					// where does it come from ??
 	delete ui;
 }
 
@@ -87,11 +89,6 @@ void MainWindow::sendFrame() {
 	uint16_t etherType = ui->etherTypeEdit->text().toUInt(NULL, 16);
 	uint8_t *srcMacA = new uint8_t [6];
 	uint8_t *dstMacA = new uint8_t [6];
-	std::string l2payload = ui->l2payloadEdit->toPlainText().toStdString();
-
-
-	uint8_t *l2PayloadHex = new uint8_t [length];
-	int index = 0;
 
 
 
@@ -107,7 +104,6 @@ void MainWindow::sendFrame() {
 
 
 
-
 	// set L2 header fields
 	testL2->setSrcMac(srcMacA);
 	testL2->setDstMac(dstMacA);
@@ -116,6 +112,11 @@ void MainWindow::sendFrame() {
 
 	if (ui->l2PayloadCheckBox->isChecked()) {
 		// use what is inside the L2 custom frame box
+		std::string l2payload = ui->l2payloadEdit->toPlainText().toStdString();
+		length = ceil((int)l2payload.length()/2.0);
+		uint8_t *l2PayloadHex = new uint8_t [length];
+		int index = 0;
+
 		for (int i = 0; i < (int)l2payload.length()-1; i+=2) {
 			// TODO: need to do error checking here
 			// the contents of l2payloadEdit are in HEX, meaning that 2 characters make 1 Byte
@@ -133,7 +134,9 @@ void MainWindow::sendFrame() {
 		}
 
 		testL2->setPayload(l2PayloadHex, length);
-		qDebug () << "l2PayloadHex length: " << length;
+		qDebug () << "l2PayloadHex length: " << testL2->getPayloadSize();
+
+		delete l2PayloadHex;
 
 	} else {
 		// use the parameters in the boxes
@@ -152,69 +155,63 @@ void MainWindow::sendFrame() {
 		testL3->setSrcIP(L3Helper::ip4To32bitUint(ui->srcIPEdit->text().toStdString()));
 		testL3->setDstIP(L3Helper::ip4To32bitUint(ui->dstIPEdit->text().toStdString()));
 
-		testL2->setPayload((uint8_t *)testL3->getRawHeader(), length);
+
+		if (ui->l3PayloadCheckBox->isChecked()) {
+			// take L3 payload from textedit, if this is not checked packet will be empty
+			std::string l3payload = ui->l3payloadEdit->toPlainText().toStdString();
+			int l3_length = ceil((int)l3payload.length()/2.0);
+			uint8_t *l3PayloadHex = new uint8_t [l3_length*sizeof(uint8_t)];
+			int index3 = 0;
+
+			// use what is inside the L3 custom frame box
+			for (int i = 0; i < l3_length; i+=2) {
+				// TODO: need to do error checking here
+				// the contents of l2payloadEdit are in HEX, meaning that 2 characters make 1 Byte
+				l3PayloadHex[index3] = (uint8_t)strtoul(l3payload.substr(i, 2).c_str(), NULL, 16);
+//				qDebug() << "index3: " << index3 << "\tl3payload str: " << l3payload.substr(i, 2).c_str();
+//				qDebug() << "l3PayloadHex: " << l3PayloadHex[index3];
+				index3++;
+			}
+
+			if ((int)l3payload.length() % 2 == 1) {
+				uint16_t tmp = (uint16_t)strtoul(l3payload.substr(l3payload.length()-1, 1).c_str(), NULL, 16);
+				l3PayloadHex[index3] = tmp<<4;
+//				qDebug() << "index: " << index << "\tl3PayloadHex str: " << tmp;
+//				qDebug() << "l3PayloadHex: " << l3PayloadHex[index3];
+			}
+
+
+
+			qDebug() << "l3_length: " << l3_length;
+			testL3->setL3Payload(l3PayloadHex, l3_length);	// put L3 payload in the L3Helper
+			delete l3PayloadHex;
+
+			qDebug() << "l3PayloadHex length: " << testL3->getL3PayloadSize();
+			// for some reason testL3->getL3PayloadSize() causes the segfault here was "fixed"
+			// it was happening between here and L3Helper::setL3PayloadSize()
+
+
+		}
+
+
+		int l2PayloadSize = testL3->getL3PayloadSize() + testL3->getIHL()*4;
+		qDebug() << "l2PayloadSize: " << l2PayloadSize;
+		testL2->setPayload((uint8_t *)testL3->getSendbuf(), l2PayloadSize);
 
 	}
 
 
 
-	// TODO: EVERYTHING BELOW HERE SHOULD BE IN A DIFFERENT CLASS, OR AT LEAST SOMEWHERE ELSE
-	int sockfd;
-	struct ifreq if_idx;
-	struct ifreq if_mac;
+	int txLen = sizeof(struct ether_header) + testL2->getPayloadSize();   // transmission length
 
-//    struct iphdr *iph = (struct iphdr *) (sendbuf + sizeof(struct ether_header));
-	struct sockaddr_ll socket_address;
-	char ifName[IFNAMSIZ];
-
-	/* Get interface name */
-/*    if (argc > 1)
-		strcpy(ifName, argv[1]);
-	else*/
-	strcpy(ifName, DEFAULT_IF);
-
-	/* Open RAW socket to send on */
-	if ((sockfd = socket(AF_PACKET, SOCK_RAW, IPPROTO_RAW)) == -1) {
-		perror("socket");
-	}
-
-	/* Get the index of the interface to send on */
-	memset(&if_idx, 0, sizeof(struct ifreq));
-	strncpy(if_idx.ifr_name, ifName, IFNAMSIZ-1);
-	if (ioctl(sockfd, SIOCGIFINDEX, &if_idx) < 0) { perror("SIOCGIFINDEX"); }
-
-	/* Get the MAC address of the interface to send on */
-	memset(&if_mac, 0, sizeof(struct ifreq));
-	strncpy(if_mac.ifr_name, ifName, IFNAMSIZ-1);
-	if (ioctl(sockfd, SIOCGIFHWADDR, &if_mac) < 0) { perror("SIOCGIFHWADDR"); }
-
-	socket_address.sll_ifindex = if_idx.ifr_ifindex;	// index of network device
-
-	socket_address.sll_halen = ETH_ALEN;	// address length
-
-	/* Destination MAC */
-	// this is the one that actually matters, it shows up in the frame header
-	socket_address.sll_addr[0] = testL2->getDstMac()[0];
-	socket_address.sll_addr[1] = testL2->getDstMac()[1];
-	socket_address.sll_addr[2] = testL2->getDstMac()[2];
-	socket_address.sll_addr[3] = testL2->getDstMac()[3];
-	socket_address.sll_addr[4] = testL2->getDstMac()[4];
-	socket_address.sll_addr[5] = testL2->getDstMac()[5];
-
-
-	/* Send packet */
-	int tx_len = sizeof(struct ether_header) + testL2->getPayloadSize();   // transmission length
-	int bytesSent = sendto(sockfd, testL2->getSendbuf(), tx_len, 0
-						   , (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll));
-//    if (sendto(sockfd, sendbuf, tx_len, 0, (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll)) < 0)
-	if (bytesSent < 0) { printf("Send failed\n"); }
-
-	qDebug() << "SENT FRAME, bytesSent: " << bytesSent;
+	// send frame
+	LinuxSocket *testSock = new LinuxSocket(dstMacA);
+	testSock->send(txLen, (char *)testL2->getSendbuf());
 
 
 	delete srcMacA;
 	delete dstMacA;
-//    delete testL2;    // check what is happening with pointers here
+	delete testSock;
 
 }
 
@@ -364,6 +361,8 @@ void MainWindow::on_runMacTableButton_clicked() {
 void MainWindow::on_l2PayloadCheckBox_clicked(bool checked) {
 	// if checked, only show custom L2 payload box, hide all the fields above it
 	ui->l2payloadEdit->setEnabled(checked);
+	ui->l3PayloadCheckBox->setEnabled(!checked);
+	ui->l3payloadEdit->setEnabled(!checked);
 
 	ui->verEdit->setEnabled(!checked);
 	ui->ihlEdit->setEnabled(!checked);
@@ -379,6 +378,7 @@ void MainWindow::on_l2PayloadCheckBox_clicked(bool checked) {
 	ui->srcIPEdit->setEnabled(!checked);
 	ui->dstIPEdit->setEnabled(!checked);
 	ui->optionsEdit->setEnabled(false);
+
 }
 
 void MainWindow::on_autoComputeCheckBox_clicked(bool checked) {
@@ -386,7 +386,6 @@ void MainWindow::on_autoComputeCheckBox_clicked(bool checked) {
 	// whenever a L3 header field is changed, checksum needs to be recomputed
 	ui->checksumEdit->setEnabled(!checked);
 	updateIPv4Checksum();
-
 }
 
 void MainWindow::on_verEdit_editingFinished() {

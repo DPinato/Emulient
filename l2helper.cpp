@@ -2,11 +2,11 @@
 
 L2Helper::L2Helper(int length) {
 
-	sendbuf = new char [length];	// this holds the whole L2 header + L2 payload
+	sendbuf = new uint8_t [length * sizeof(uint8_t)];	// this holds the whole L2 header + L2 payload
 	eh = (struct ether_header *) sendbuf;
 	srcMac = new uint8_t [6];
 	dstMac = new uint8_t [6];
-	frameSize = 14; // minimum header size for Ethernet II
+	frameSize = length;
 
 }
 
@@ -44,11 +44,21 @@ void L2Helper::setEtherType(uint16_t eType) {
 }
 
 void L2Helper::setPayload(uint8_t *data, int size) {
-	payload = new uint8_t [size];
-	payload = (uint8_t*)data;	// TODO: use memcopy here
+	qDebug() << 1 << "\tsize: " << size;
 	payloadSize = size;
-	frameSize += payloadSize;
-	memcpy(&sendbuf[14], payload, payloadSize);
+	l2Payload = new uint8_t [payloadSize * sizeof(uint8_t)];
+	memcpy(l2Payload, data, (payloadSize * sizeof(uint8_t)));
+
+	// change the size of sendbuf, since it needs to include the L2 payload
+	frameSize = sizeof(struct ether_header) + payloadSize;
+	qDebug() << 2 << "\tframeSize: " << frameSize;
+
+	sendbuf = (uint8_t *)realloc(sendbuf, frameSize * sizeof(uint8_t));
+	if (sendbuf == NULL) {
+		std::cerr << "Unable to reallocate in L2Helper::setPayload, tmpSize: " << frameSize;
+	}
+	memcpy(&sendbuf[sizeof(struct ether_header)], l2Payload, payloadSize);
+	qDebug() << 3;
 
 }
 
@@ -68,12 +78,12 @@ uint16_t L2Helper::getEtherType() {
 	return eh->ether_type;
 }
 
-char *L2Helper::getSendbuf() {
+uint8_t *L2Helper::getSendbuf() {
 	return sendbuf;
 }
 
 uint8_t *L2Helper::getPayload() {
-	return payload;
+	return l2Payload;
 }
 
 int L2Helper::getFrameSize() {

@@ -53,7 +53,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>12:34:56:78:9A:BC</string>
+       <string>08:00:27:48:69:25</string>
       </property>
       <property name="maxLength">
        <number>17</number>
@@ -85,7 +85,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>0E:DC:BA:98:76:54</string>
+       <string>01:80:C2:00:00:00</string>
       </property>
       <property name="maxLength">
        <number>17</number>
@@ -168,7 +168,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>0x0800</string>
+       <string>0026</string>
       </property>
       <property name="maxLength">
        <number>6</number>
@@ -188,7 +188,7 @@
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;4500001400000000000000000000000000000000&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;4242030000000000000008002748692500000000000008002748692580040000140002000f00&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="acceptRichText">
        <bool>true</bool>
@@ -683,6 +683,9 @@ p, li { white-space: pre-wrap; }
       <property name="text">
        <string>L2 payload (HEX)</string>
       </property>
+      <property name="checked">
+       <bool>false</bool>
+      </property>
      </widget>
      <widget class="QCheckBox" name="l3PayloadCheckBox">
       <property name="geometry">
@@ -695,6 +698,9 @@ p, li { white-space: pre-wrap; }
       </property>
       <property name="text">
        <string>L3 payload (HEX)</string>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
       </property>
      </widget>
      <widget class="QTextEdit" name="l3payloadEdit">
@@ -711,7 +717,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;12345&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;080043&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="acceptRichText">
        <bool>true</bool>

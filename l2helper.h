@@ -30,16 +30,17 @@ public:
 	uint8_t *getSrcMac();
 	uint8_t *getDstMac();
 	uint16_t getEtherType();
-	char *getSendbuf();
+	uint8_t *getSendbuf();
 	uint8_t *getPayload();
 	int getFrameSize();
 	int getPayloadSize();
 
 private:
-	char *sendbuf;		// complete L2 frame, header + payload
-	uint8_t *payload;	// payload of the L2 frame, this is closer to binary
-	int payloadSize;	// size of payload
-	int frameSize;		// size of the whole frame
+	uint8_t *sendbuf;		// complete L2 frame, header + payload
+
+	uint8_t *l2Payload;	// payload of the L2 frame, this is closer to binary
+	int payloadSize;	// size of payload, L2 payload
+	int frameSize;		// size of the whole frame, L2 header + L2 payload
 
 	struct ether_header *eh;
 
