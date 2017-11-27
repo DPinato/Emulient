@@ -15,10 +15,11 @@
 class L2Helper
 {
 public:
-	L2Helper(int length);
+	L2Helper();
 	~L2Helper();
 
 	// SET
+	void init();	// reset variables and flags
 	void setEtherHeader(ether_header *h);
 	void setSrcMac(uint8_t *src);
 	void setDstMac(uint8_t *dst);
@@ -44,6 +45,9 @@ public:
 	uint16_t getVlanID();
 
 
+	bool hasDot1Q();
+
+
 private:
 	uint8_t *sendbuf;		// complete L2 frame, header + payload
 
@@ -61,6 +65,7 @@ private:
 	uint64_t dstMacInt;
 
 	// for 802.1Q header
+	bool dot1q;			// it is true of frame contains 802.1Q header
 	uint16_t tpid;		// 16 bits
 	uint8_t pcp;		// 3 bits
 	uint8_t dei;		// 1 bit

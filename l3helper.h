@@ -17,6 +17,8 @@ public:
 	L3Helper(int headerLength);
 	~L3Helper();
 
+	void init();	// reset variables
+
 
 	// set
 	void setVersion(uint8_t v);	// version1

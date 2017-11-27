@@ -71,9 +71,7 @@ private slots:
 	void on_checksumEdit_editingFinished();
 	void on_srcIPEdit_editingFinished();
 	void on_dstIPEdit_editingFinished();
-
 	void on_dot1qCheckBox_clicked(bool checked);
-
 	void on_l3PayloadCheckBox_clicked(bool checked);
 
 private:

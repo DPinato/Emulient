@@ -22,6 +22,18 @@ L3Helper::~L3Helper() {
 	delete l3Payload;
 }
 
+void L3Helper::init() {
+	ihl = 5;		// default value is 5, when no IP options are in the header
+	sendbuf = (uint8_t *)realloc(sendbuf, (ihl*4)*sizeof(uint8_t));
+
+	for (int i = 0; i < (ihl*4); i++) { sendbuf[i] = 0; }	// initialise sendbuf to 0
+
+	version = 4;	// by default, do IPv4
+	sendbuf[0] = (version<<4) + ihl;
+	payloadSize = 0;	// initialise
+
+}
+
 void L3Helper::setVersion(uint8_t v) {
 	version = v;
 	sendbuf[0] = (version<<4) + ihl;

@@ -28,6 +28,10 @@ MainWindow::MainWindow(QWidget *parent) :
 */
 
 
+	// TECHNICALLY the minimum size of a frame is the L2 header
+	// the standard dictates however that the minimum frame size needs to be 64 Bytes
+	testL2 = new L2Helper();
+
 	if (ui->l2PayloadCheckBox->isChecked()) {
 		std::string l2payload = ui->l2payloadEdit->toPlainText().toStdString();
 		length = ceil((int)l2payload.length()/2.0);
@@ -36,26 +40,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	}
 
 	testL3 = new L3Helper(length);	// options not supported yet
-	testL2 = new L2Helper(sizeof(struct ether_header)+length);	// will have to change when we put in 802.1Q tags and L3 payload
-
-
-	testL3->setVersion((uint8_t)ui->verEdit->text().toUInt(NULL, 16));
-	testL3->setIHL((uint8_t)ui->ihlEdit->text().toUInt(NULL, 16));
-	testL3->setDSCP((uint8_t)ui->dscpEdit->text().toUInt(NULL, 16));
-	testL3->setECN((uint8_t)ui->ecnEdit->text().toUInt(NULL, 16));
-	testL3->setTotLength((uint16_t)ui->totLengthEdit->text().toUInt(NULL, 16));
-	testL3->setIdentification((uint16_t)ui->identificationEdit->text().toUInt(NULL, 16));
-	testL3->setFlags((uint16_t)ui->flagsEdit->text().toUInt(NULL, 16));
-	testL3->setFragOffset((uint16_t)ui->fragOffsetEdit->text().toUInt(NULL, 16));
-	testL3->setTTL((uint8_t)ui->ttlEdit->text().toUInt(NULL, 16));
-	testL3->setProtocol((uint8_t)ui->protocolEdit->text().toUInt(NULL, 16));
-//	testL3->setChecksum((uint16_t)ui->checksumEdit->text().toUInt(NULL, 16));
-	testL3->setSrcIP(L3Helper::ip4To32bitUint(ui->srcIPEdit->text().toStdString()));
-	testL3->setDstIP(L3Helper::ip4To32bitUint(ui->dstIPEdit->text().toStdString()));
-
-
-	qDebug() << "checksum: " << testL3->computeIPv4Checksum();
-	qDebug() << "verify checksum: " << testL3->verifyIPv4Checksum();
 
 
 	// initialise GUI
@@ -101,6 +85,7 @@ void MainWindow::sendFrame() {
 
 
 	// set L2 header fields
+	testL2->init();
 	testL2->setSrcMac(srcMacA);
 	testL2->setDstMac(dstMacA);
 	testL2->setEtherType(etherType);  // function in L2Helper does htons()
@@ -114,12 +99,11 @@ void MainWindow::sendFrame() {
 
 
 
-
 	if (ui->l2PayloadCheckBox->isChecked()) {
 		// use what is inside the L2 custom frame box
 		std::string l2payload = ui->l2payloadEdit->toPlainText().toStdString();
 		length = ceil((int)l2payload.length()/2.0);
-		uint8_t *l2PayloadHex = new uint8_t [length];
+		uint8_t *l2PayloadHex = new uint8_t [length*sizeof(uint8_t)];
 		int index = 0;
 
 		for (int i = 0; i < (int)l2payload.length()-1; i+=2) {
@@ -140,12 +124,12 @@ void MainWindow::sendFrame() {
 
 		testL2->setPayload(l2PayloadHex, length);
 		qDebug () << "l2PayloadHex length: " << testL2->getPayloadSize();
-
 		delete l2PayloadHex;
 
 	} else {
 		// use the parameters in the boxes
 		// L3 STUFF
+		testL3->init();
 		testL3->setVersion((uint8_t)ui->verEdit->text().toUInt(NULL, 16));
 		testL3->setIHL((uint8_t)ui->ihlEdit->text().toUInt(NULL, 16));
 		testL3->setDSCP((uint8_t)ui->dscpEdit->text().toUInt(NULL, 16));
@@ -168,31 +152,32 @@ void MainWindow::sendFrame() {
 			uint8_t *l3PayloadHex = new uint8_t [l3_length*sizeof(uint8_t)];
 			int index3 = 0;
 
+			qDebug() << "l3payload: " << QString(l3payload.c_str());
+
 			// use what is inside the L3 custom frame box
-			for (int i = 0; i < l3_length; i+=2) {
+			for (int i = 0; i < (int)l3payload.length()-1; i+=2) {
 				// TODO: need to do error checking here
 				// the contents of l2payloadEdit are in HEX, meaning that 2 characters make 1 Byte
 				l3PayloadHex[index3] = (uint8_t)strtoul(l3payload.substr(i, 2).c_str(), NULL, 16);
-//				qDebug() << "index3: " << index3 << "\tl3payload str: " << l3payload.substr(i, 2).c_str();
-//				qDebug() << "l3PayloadHex: " << l3PayloadHex[index3];
+				qDebug() << "index3: " << index3 << "\tl3payload str: " << l3payload.substr(i, 2).c_str();
+				qDebug() << "l3PayloadHex: " << l3PayloadHex[index3];
 				index3++;
 			}
 
 			if ((int)l3payload.length() % 2 == 1) {
 				uint16_t tmp = (uint16_t)strtoul(l3payload.substr(l3payload.length()-1, 1).c_str(), NULL, 16);
 				l3PayloadHex[index3] = tmp<<4;
-//				qDebug() << "index: " << index << "\tl3PayloadHex str: " << tmp;
-//				qDebug() << "l3PayloadHex: " << l3PayloadHex[index3];
+				qDebug() << "index: " << index3 << "\tl3PayloadHex str: " << tmp;
+				qDebug() << "l3PayloadHex: " << l3PayloadHex[index3];
 			}
 
 
-			qDebug() << "l3_length: " << l3_length;
 			testL3->setL3Payload(l3PayloadHex, l3_length);	// put L3 payload in the L3Helper
 			delete l3PayloadHex;
 
 			qDebug() << "l3PayloadHex length: " << testL3->getL3PayloadSize();
-			// for some reason testL3->getL3PayloadSize() causes the segfault here was "fixed"
-			// it was happening between here and L3Helper::setL3PayloadSize()
+			qDebug() << "checksum: " << testL3->computeIPv4Checksum();
+			qDebug() << "verify checksum: " << testL3->verifyIPv4Checksum();
 
 		}
 
@@ -200,6 +185,9 @@ void MainWindow::sendFrame() {
 		testL2->setPayload((uint8_t *)testL3->getSendbuf(), l2PayloadSize);
 		qDebug() << "l2PayloadSize: " << l2PayloadSize;
 		qDebug() << "testL2->getPayloadSize(): " << testL2->getPayloadSize();
+		qDebug() << "testL3->getL3PayloadSize(): " << testL3->getL3PayloadSize();
+
+
 	}
 
 
@@ -210,7 +198,6 @@ void MainWindow::sendFrame() {
 				 << QString::number(testL2->getSendbuf()[i+1], 16) << "\t"
 				 << QString::number(testL2->getSendbuf()[i+2], 16) << "\t"
 				 << QString::number(testL2->getSendbuf()[i+3], 16);
-
 	}
 
 
@@ -374,7 +361,7 @@ void MainWindow::on_l2PayloadCheckBox_clicked(bool checked) {
 	// if checked, only show custom L2 payload box, hide all the fields above it
 	ui->l2payloadEdit->setEnabled(checked);
 	ui->l3PayloadCheckBox->setEnabled(!checked);
-	ui->l3payloadEdit->setEnabled(!checked);
+	ui->l3payloadEdit->setEnabled(ui->l3PayloadCheckBox->isChecked());
 
 	ui->verEdit->setEnabled(!checked);
 	ui->ihlEdit->setEnabled(!checked);
