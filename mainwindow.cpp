@@ -182,35 +182,36 @@ void MainWindow::sendFrame() {
 		}
 
 		int l2PayloadSize = testL3->getL3PayloadSize() + testL3->getIHL()*4;
-		testL2->setPayload((uint8_t *)testL3->getSendbuf(), l2PayloadSize);
-		qDebug() << "l2PayloadSize: " << l2PayloadSize;
+		testL2->setPayload(testL3->getSendbuf(), l2PayloadSize);
+		qDebug() << "l2PayloadSize: " << l2PayloadSize
+				 << "\tL3PSize: " << testL3->getL3PayloadSize() << "\tihl: " << testL3->getIHL();
 		qDebug() << "testL2->getPayloadSize(): " << testL2->getPayloadSize();
-		qDebug() << "testL3->getL3PayloadSize(): " << testL3->getL3PayloadSize();
 
 
 	}
 
 
 	qDebug() << "frame size: " << testL2->getFrameSize();
+//	testL3->showSendBuf(testL3->getL3PayloadSize() + testL3->getIHL()*4);	// show L3 buffer, DEBUG
 
-	for (int i = 0; i < testL2->getFrameSize(); i+=4) {
-		qDebug() << QString::number(testL2->getSendbuf()[i], 16) << "\t"
-				 << QString::number(testL2->getSendbuf()[i+1], 16) << "\t"
-				 << QString::number(testL2->getSendbuf()[i+2], 16) << "\t"
-				 << QString::number(testL2->getSendbuf()[i+3], 16);
-	}
+//	for (int i = 0; i < testL2->getFrameSize(); i+=4) {
+//		qDebug() << QString::number(testL2->getSendbuf()[i], 16) << "\t"
+//				 << QString::number(testL2->getSendbuf()[i+1], 16) << "\t"
+//				 << QString::number(testL2->getSendbuf()[i+2], 16) << "\t"
+//				 << QString::number(testL2->getSendbuf()[i+3], 16);
+//	}
 
 
 	int txLen = testL2->getFrameSize();   // transmission length
 
 	// send frame
 	LinuxSocket *testSock = new LinuxSocket(dstMacA);
-	testSock->send(txLen, (char *)testL2->getSendbuf());
+	testSock->send(txLen, testL2->getSendbuf());
 
 
-	delete srcMacA;
-	delete dstMacA;
-	delete testSock;
+	delete[] srcMacA;
+	delete[] dstMacA;
+//	delete testSock;
 
 }
 
@@ -438,8 +439,8 @@ void MainWindow::on_fragOffsetEdit_editingFinished() {
 
 void MainWindow::on_ttlEdit_editingFinished() {
 	// make sure L3 header checksum if recomputed
-	testL3->setChecksum(testL3->computeIPv4Checksum());
-	testL3->setTTL((uint8_t)ui->ttlEdit->text().toUInt(NULL, 16));
+	testL3->setFragOffset((uint16_t)ui->ttlEdit->text().toUInt(NULL, 16));
+	updateIPv4Checksum();
 }
 
 void MainWindow::on_protocolEdit_editingFinished() {

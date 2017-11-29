@@ -39,7 +39,7 @@ LinuxSocket::LinuxSocket(uint8_t *mac) {
 
 }
 
-int LinuxSocket::send(int length, char *buffer) {
+int LinuxSocket::send(int length, uint8_t *buffer) {
 	// using the socket already initialised, send the buffer of data to the socket
 	int bytesSent = sendto(sockfd, buffer, length, 0
 						   , (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll));

@@ -2,7 +2,6 @@
 #define LINUXSOCKET_H
 
 // #define DEFAULT_IF	"eth0"
-// #define BUF_SIZ	1024
 
 #include "mainwindow.h"
 
@@ -10,7 +9,7 @@ class LinuxSocket {
 public:
 	LinuxSocket(uint8_t *mac);
 
-	int send(int length, char *buffer);		// set the frame constructed
+	int send(int length, uint8_t *buffer);		// set the frame constructed
 
 
 	// set

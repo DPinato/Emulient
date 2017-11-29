@@ -24,7 +24,9 @@ void L2Helper::init() {
 	payloadSize = 0;
 	headerSize = sizeof(struct ether_header);
 	frameSize = headerSize;
-	sendbuf = (uint8_t *)realloc(sendbuf, frameSize*sizeof(uint8_t));
+
+	// check if sendbuf was already allocated
+	if (sendbuf != NULL) { sendbuf = (uint8_t *)realloc(sendbuf, frameSize*sizeof(uint8_t)); }
 
 }
 
@@ -66,7 +68,8 @@ void L2Helper::setPayload(uint8_t *data, int size) {
 	frameSize = headerSize + payloadSize;
 	qDebug() << "setPayload(), frameSize: "<< frameSize
 			 << "\theaderSize: " << headerSize
-			 << "\tpayloadSize: " << payloadSize;
+			 << "\tpayloadSize: " << payloadSize
+			 << "\tdot1q: " << dot1q;
 
 	sendbuf = (uint8_t *)realloc(sendbuf, frameSize * sizeof(uint8_t));
 	if (sendbuf == NULL) {

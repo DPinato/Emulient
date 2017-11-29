@@ -23,6 +23,7 @@ L3Helper::~L3Helper() {
 }
 
 void L3Helper::init() {
+	// reset the status of the object to initial values
 	ihl = 5;		// default value is 5, when no IP options are in the header
 	sendbuf = (uint8_t *)realloc(sendbuf, (ihl*4)*sizeof(uint8_t));
 
@@ -261,6 +262,7 @@ uint16_t L3Helper::verifyIPv4Checksum() {
 void L3Helper::showSendBuf(int l) {
 	// show l bytes of sendbuf
 	for (int i = 0; i < l; i++) {
-		qDebug() << sendbuf[i];
+//		qDebug() << sendbuf[i];
+		qDebug() << QString::number(sendbuf[i], 16);
 	}
 }

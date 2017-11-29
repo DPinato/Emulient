@@ -18,7 +18,7 @@ bool Utilities::checkMacAddress(std::string mac) {
 	}
 
 	// get 2 digit hex numbers 1 by 1
-	for (int i = 0; i < mac.length(); i++) {
+	for (int i = 0; i < (int)mac.length(); i++) {
 		std::string tmp = mac.substr(i, 2);
 		qDebug() << QString::fromLocal8Bit(tmp.c_str());
 
