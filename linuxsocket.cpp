@@ -39,9 +39,13 @@ LinuxSocket::LinuxSocket(uint8_t *mac) {
 
 }
 
+LinuxSocket::~LinuxSocket() {
+	delete[] sockDstMac;
+}
+
 int LinuxSocket::send(int length, uint8_t *buffer) {
 	// using the socket already initialised, send the buffer of data to the socket
-	int bytesSent = sendto(sockfd, buffer, length, 0
+	int bytesSent = sendto(sockfd, (uint8_t *)buffer, length, 0
 						   , (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll));
 //    if (sendto(sockfd, sendbuf, tx_len, 0, (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll)) < 0)
 	if (bytesSent < 0) { printf("Send failed\n"); }
@@ -53,12 +57,8 @@ int LinuxSocket::send(int length, uint8_t *buffer) {
 }
 
 void LinuxSocket::setDstMacAddress(uint8_t *mac) {
-	sockDstMac[0] = mac[0];
-	sockDstMac[1] = mac[1];
-	sockDstMac[2] = mac[2];
-	sockDstMac[3] = mac[3];
-	sockDstMac[4] = mac[4];
-	sockDstMac[5] = mac[5];
+	sockDstMac = new uint8_t [6 * sizeof(uint8_t)];
+	memcpy(sockDstMac, mac, 6 * sizeof(uint8_t));
 
 }
 

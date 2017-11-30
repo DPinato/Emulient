@@ -8,6 +8,7 @@
 class LinuxSocket {
 public:
 	LinuxSocket(uint8_t *mac);
+	~LinuxSocket();
 
 	int send(int length, uint8_t *buffer);		// set the frame constructed
 
@@ -33,7 +34,7 @@ private:
 	struct sockaddr_ll socket_address;
 	char ifName[IFNAMSIZ];
 
-	uint8_t sockDstMac[6];	// I am not sure whether this is REALLY needed for the socket
+	uint8_t *sockDstMac;	// I am not sure whether this is REALLY needed for the socket
 
 };
 

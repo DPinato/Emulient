@@ -17,8 +17,6 @@ public:
 	L3Helper(int headerLength);
 	~L3Helper();
 
-	void init();	// reset variables
-
 
 	// set
 	void setVersion(uint8_t v);	// version1
@@ -37,8 +35,7 @@ public:
 	void setSrcIP(uint32_t ip);
 	void setDstIP(uint32_t ip);
 
-	void setL3PayloadSize(int size);
-	void setL3Payload(uint8_t *buf, int size);
+	void setL3Payload(uint8_t *data, int size);
 
 
 	// get
@@ -65,7 +62,9 @@ private:
 	uint8_t *sendbuf;		// L3 header + L3 payload
 						// its size is IHL until setL3PayloadSize() is called
 	uint8_t *l3Payload;	// L3 payload
+	int headerSize;		// size of L3 header
 	int payloadSize;	// L3 payload size, in bytes
+	int packetSize;		// size of whole packet, L3 header + L3 payload
 
 	struct iphdr *iph;
 

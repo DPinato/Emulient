@@ -42,12 +42,17 @@ MainWindow::MainWindow(QWidget *parent) :
 	testL3 = new L3Helper(length);	// options not supported yet
 
 
+
 	// initialise GUI
 	ui->autoComputeCheckBox->setChecked(true);
-	on_autoComputeCheckBox_clicked(true);
+	ui->checksumEdit->setEnabled(false);
 	on_dot1qCheckBox_clicked(false);
 	on_l2PayloadCheckBox_clicked(false);
-	on_l3PayloadCheckBox_clicked(false);
+
+	ui->l3PayloadCheckBox->setChecked(true);
+	on_l3PayloadCheckBox_clicked(true);
+
+
 
 }
 
@@ -124,12 +129,12 @@ void MainWindow::sendFrame() {
 
 		testL2->setPayload(l2PayloadHex, length);
 		qDebug () << "l2PayloadHex length: " << testL2->getPayloadSize();
-		delete l2PayloadHex;
+		delete[] l2PayloadHex;
 
 	} else {
 		// use the parameters in the boxes
 		// L3 STUFF
-		testL3->init();
+//		testL3->init();
 		testL3->setVersion((uint8_t)ui->verEdit->text().toUInt(NULL, 16));
 		testL3->setIHL((uint8_t)ui->ihlEdit->text().toUInt(NULL, 16));
 		testL3->setDSCP((uint8_t)ui->dscpEdit->text().toUInt(NULL, 16));
@@ -173,7 +178,7 @@ void MainWindow::sendFrame() {
 
 
 			testL3->setL3Payload(l3PayloadHex, l3_length);	// put L3 payload in the L3Helper
-			delete l3PayloadHex;
+			delete[] l3PayloadHex;
 
 			qDebug() << "l3PayloadHex length: " << testL3->getL3PayloadSize();
 			qDebug() << "checksum: " << testL3->computeIPv4Checksum();
@@ -181,6 +186,7 @@ void MainWindow::sendFrame() {
 
 		}
 
+		updateIPv4Checksum();	// update GUI with checksum
 		int l2PayloadSize = testL3->getL3PayloadSize() + testL3->getIHL()*4;
 		testL2->setPayload(testL3->getSendbuf(), l2PayloadSize);
 		qDebug() << "l2PayloadSize: " << l2PayloadSize
@@ -194,13 +200,13 @@ void MainWindow::sendFrame() {
 	qDebug() << "frame size: " << testL2->getFrameSize();
 //	testL3->showSendBuf(testL3->getL3PayloadSize() + testL3->getIHL()*4);	// show L3 buffer, DEBUG
 
-    for (int i = 0; i < testL2->getFrameSize(); i+=4) {
-        qDebug() << QString::number(testL2->getSendbuf()[i], 16) << "\t"
-                 << QString::number(testL2->getSendbuf()[i+1], 16) << "\t"
-                 << QString::number(testL2->getSendbuf()[i+2], 16) << "\t"
-                 << QString::number(testL2->getSendbuf()[i+3], 16);
-    }
-
+/*	for (int i = 0; i < testL2->getFrameSize(); i+=4) {
+		qDebug() << QString::number(testL2->getSendbuf()[i], 16) << "\t"
+				 << QString::number(testL2->getSendbuf()[i+1], 16) << "\t"
+				 << QString::number(testL2->getSendbuf()[i+2], 16) << "\t"
+				 << QString::number(testL2->getSendbuf()[i+3], 16);
+	}
+*/
 
 	int txLen = testL2->getFrameSize();   // transmission length
 
@@ -208,6 +214,7 @@ void MainWindow::sendFrame() {
 	LinuxSocket *testSock = new LinuxSocket(dstMacA);
 	testSock->send(txLen, testL2->getSendbuf());
 
+	qDebug() << "\n";
 
 	delete[] srcMacA;
 	delete[] dstMacA;
@@ -374,10 +381,13 @@ void MainWindow::on_l2PayloadCheckBox_clicked(bool checked) {
 	ui->fragOffsetEdit->setEnabled(!checked);
 	ui->ttlEdit->setEnabled(!checked);
 	ui->protocolEdit->setEnabled(!checked);
-	ui->checksumEdit->setEnabled(!checked);
 	ui->srcIPEdit->setEnabled(!checked);
 	ui->dstIPEdit->setEnabled(!checked);
+
 	ui->optionsEdit->setEnabled(false);
+
+	// this should be enabled only if the proper checkbox is checked
+	ui->checksumEdit->setEnabled(!ui->autoComputeCheckBox->isChecked());
 
 }
 

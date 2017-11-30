@@ -2,14 +2,15 @@
 
 L3Helper::L3Helper(int headerLength) {
 	// tos, tot_len, id, frag_off, ttl, protocol, check, saddr, daddr
-	sendbuf = new uint8_t [headerLength*sizeof(uint8_t)];	// this holds the whole L3 header + L3 payload
+	headerSize = headerLength;
+	sendbuf = new uint8_t [headerSize*sizeof(uint8_t)];	// this holds the whole L3 header + L3 payload
 
 	// initialise sendbuf to 0
-	for (int i = 0; i < headerLength; i++) { sendbuf[i] = 0; }
+	for (int i = 0; i < headerSize; i++) { sendbuf[i] = 0; }
 	iph = (struct iphdr *) sendbuf;
 
 	version = 4;	// by default, do IPv4
-	ihl = headerLength/4;		// default value is 5, when no IP options are in the header
+	ihl = headerSize/4;		// default value is 5, when no IP options are in the header
 	sendbuf[0] = (version<<4) + ihl;
 //	qDebug() << "sendbuf[0]: " << (uint8_t)sendbuf[0];
 
@@ -18,21 +19,8 @@ L3Helper::L3Helper(int headerLength) {
 }
 
 L3Helper::~L3Helper() {
-	delete sendbuf;
-	delete l3Payload;
-}
-
-void L3Helper::init() {
-	// reset the status of the object to initial values
-	ihl = 5;		// default value is 5, when no IP options are in the header
-	sendbuf = (uint8_t *)realloc(sendbuf, (ihl*4)*sizeof(uint8_t));
-
-	for (int i = 0; i < (ihl*4); i++) { sendbuf[i] = 0; }	// initialise sendbuf to 0
-
-	version = 4;	// by default, do IPv4
-	sendbuf[0] = (version<<4) + ihl;
-	payloadSize = 0;	// initialise
-
+	delete[] sendbuf;
+	delete[] l3Payload;
 }
 
 void L3Helper::setVersion(uint8_t v) {
@@ -111,29 +99,32 @@ void L3Helper::setDstIP(uint32_t ip) {
 	iph->daddr = htonl(ip);
 }
 
-void L3Helper::setL3PayloadSize(int size) {
+void L3Helper::setL3Payload(uint8_t *data, int size) {
 	// reallocate sendbuf to include header + payload
-	qDebug() << "setL3PayloadSize, size: " << size;
-
-	int tmpSize = sizeof(uint8_t)*((ihl*4)+size);
-	sendbuf = (uint8_t *)realloc(sendbuf, tmpSize);
-	if (sendbuf == NULL) {
-		std::cerr << "Unable to reallocate in L3Helper::setL3PayloadSize, tmpSize: " << tmpSize;
-	}
-
-//	for (int i = 0; i < size; i++) { qDebug() << "i: " << i << "\t" << l3Payload[i]; }
-
-	// copy l3Payload in sendbuf
-	memcpy(&sendbuf[ihl*4*sizeof(uint8_t)], l3Payload, size);
-
-}
-
-void L3Helper::setL3Payload(uint8_t *buf, int size) {
-	qDebug() << "setL3Payload: " << size;
+	// at this point in time, sendbuf only has the header, and it is as large as the header
 	payloadSize = size;
-	l3Payload = new uint8_t [payloadSize*sizeof(uint8_t)];
-	memcpy(l3Payload, buf, payloadSize);
-	setL3PayloadSize(payloadSize);
+	l3Payload = new uint8_t [payloadSize * sizeof(uint8_t)];
+	memcpy(l3Payload, data, (payloadSize * sizeof(uint8_t)));
+
+
+	// change the size of sendbuf, since it needs to include the L3 payload
+	packetSize = (headerSize + payloadSize) * sizeof(uint8_t);
+	qDebug() << "setL3PayloadSize(), packetSize: "<< packetSize
+			 << "\theaderSize: " << headerSize
+			 << "\tpayloadSize: " << payloadSize;
+
+
+	// avoid using realloc()
+//	sendbuf = (uint8_t *)realloc(sendbuf, tmpSize*sizeof(uint8_t));
+	uint8_t *tmpBuf = new uint8_t [headerSize];	// temporary buffer while we enlarge sendbuf
+	memcpy(tmpBuf, sendbuf, headerSize * sizeof(uint8_t));		// copy header in temporary buffer
+	delete[] sendbuf;
+
+	sendbuf = new uint8_t [packetSize];
+	memcpy(sendbuf, tmpBuf, headerSize);
+	memcpy(&sendbuf[headerSize * sizeof(uint8_t)], l3Payload, payloadSize);	// copy l3Payload in sendbuf
+
+	delete[] tmpBuf;
 
 }
 

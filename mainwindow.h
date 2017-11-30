@@ -17,6 +17,7 @@
 #include <iostream>
 #include <bitset>
 #include <sstream>
+#include <vector>
 
 #include <QMainWindow>
 #include <QDebug>

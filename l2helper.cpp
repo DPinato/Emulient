@@ -3,20 +3,18 @@
 L2Helper::L2Helper() {
 	headerSize = sizeof(struct ether_header);
 	frameSize = headerSize;
-	sendbuf = new uint8_t [frameSize*sizeof(uint8_t)];	// this holds the whole L2 header + L2 payload
+	sendbuf = new uint8_t [frameSize * sizeof(uint8_t)];	// this holds the whole L2 header + L2 payload
 	eh = (struct ether_header *) sendbuf;
-	srcMac = new uint8_t [6];
-	dstMac = new uint8_t [6];
 	payloadSize = 0;
 	dot1q = false;
 
 }
 
 L2Helper::~L2Helper() {
-	delete sendbuf;
+	delete[] sendbuf;
 	delete eh;
-	delete srcMac;
-	delete dstMac;
+	delete[] srcMac;
+	delete[] dstMac;
 }
 
 void L2Helper::init() {
@@ -25,9 +23,6 @@ void L2Helper::init() {
 	headerSize = sizeof(struct ether_header);
 	frameSize = headerSize;
 
-	// check if sendbuf was already allocated
-	if (sendbuf != NULL) { sendbuf = (uint8_t *)realloc(sendbuf, frameSize*sizeof(uint8_t)); }
-
 }
 
 void L2Helper::setEtherHeader(ether_header *h) {
@@ -35,23 +30,25 @@ void L2Helper::setEtherHeader(ether_header *h) {
 }
 
 void L2Helper::setSrcMac(uint8_t *src) {
-    memcpy(srcMac, src, 6*sizeof(uint8_t));
-    eh->ether_shost[0] = srcMac[0];
-    eh->ether_shost[1] = srcMac[1];
-    eh->ether_shost[2] = srcMac[2];
-    eh->ether_shost[3] = srcMac[3];
-    eh->ether_shost[4] = srcMac[4];
-    eh->ether_shost[5] = srcMac[5];
+	srcMac = new uint8_t [6 * sizeof(uint8_t)];
+	memcpy(srcMac, src, 6 * sizeof(uint8_t));
+	eh->ether_shost[0] = srcMac[0];
+	eh->ether_shost[1] = srcMac[1];
+	eh->ether_shost[2] = srcMac[2];
+	eh->ether_shost[3] = srcMac[3];
+	eh->ether_shost[4] = srcMac[4];
+	eh->ether_shost[5] = srcMac[5];
 }
 
 void L2Helper::setDstMac(uint8_t *dst) {
-    memcpy(dstMac, dst, 6*sizeof(uint8_t));
-    eh->ether_dhost[0] = dstMac[0];
-    eh->ether_dhost[1] = dstMac[1];
-    eh->ether_dhost[2] = dstMac[2];
-    eh->ether_dhost[3] = dstMac[3];
-    eh->ether_dhost[4] = dstMac[4];
-    eh->ether_dhost[5] = dstMac[5];
+	dstMac = new uint8_t [6 * sizeof(uint8_t)];
+	memcpy(dstMac, dst, 6 * sizeof(uint8_t));
+	eh->ether_dhost[0] = dstMac[0];
+	eh->ether_dhost[1] = dstMac[1];
+	eh->ether_dhost[2] = dstMac[2];
+	eh->ether_dhost[3] = dstMac[3];
+	eh->ether_dhost[4] = dstMac[4];
+	eh->ether_dhost[5] = dstMac[5];
 }
 
 void L2Helper::setEtherType(uint16_t eType) {
@@ -60,25 +57,32 @@ void L2Helper::setEtherType(uint16_t eType) {
 
 void L2Helper::setPayload(uint8_t *data, int size) {
 	// set the payload of the L2 frame
-	// q indicates whether the header has dot1q, for frame size calculation
+	// at this point in time, sendbuf only has the header, and it is as large as the header
 	payloadSize = size;
 	l2Payload = new uint8_t [payloadSize * sizeof(uint8_t)];
 	memcpy(l2Payload, data, (payloadSize * sizeof(uint8_t)));
 
+
 	// change the size of sendbuf, since it needs to include the L2 payload
-	if (!dot1q) { headerSize = (int)sizeof(struct ether_header); }
-	frameSize = headerSize + payloadSize;
+	if (!dot1q) {headerSize = (int)sizeof(struct ether_header) * sizeof(uint8_t); }
+	frameSize = (headerSize + payloadSize) * sizeof(uint8_t);
 	qDebug() << "setPayload(), frameSize: "<< frameSize
 			 << "\theaderSize: " << headerSize
 			 << "\tpayloadSize: " << payloadSize
 			 << "\tdot1q: " << dot1q;
 
-	sendbuf = (uint8_t *)realloc(sendbuf, frameSize * sizeof(uint8_t));
-	if (sendbuf == NULL) {
-		std::cerr << "Unable to reallocate in L2Helper::setPayload, tmpSize: " << frameSize;
-	}
 
-	memcpy(&sendbuf[headerSize*sizeof(uint8_t)], l2Payload, payloadSize);
+	// avoid using realloc()
+//	sendbuf = (uint8_t *)realloc(sendbuf, frameSize * sizeof(uint8_t));
+	uint8_t *tmpBuf = new uint8_t [headerSize];	// temporary buffer while we enlarge sendbuf
+	memcpy(tmpBuf, sendbuf, headerSize);		// copy header in temporary buffer
+	delete[] sendbuf;
+
+	sendbuf = new uint8_t [frameSize];		// enlarge sendbuf
+	memcpy(sendbuf, tmpBuf, headerSize);	// copy header
+	memcpy(&sendbuf[headerSize * sizeof(uint8_t)], l2Payload, payloadSize);	// copy payload
+
+	delete[] tmpBuf;
 
 }
 
@@ -98,8 +102,17 @@ void L2Helper::setDot1qHeader(uint16_t tpid, uint8_t pcp, uint8_t dei, uint16_t 
 			 << "\theaderSize: " << headerSize
 			 << "\tpayloadSize: " << payloadSize;
 
-	sendbuf = (uint8_t *)realloc(sendbuf, frameSize*sizeof(uint8_t));	// increase frame buffer by 4 Bytes
+	// avoid using realloc()
+	sendbuf = (uint8_t *)realloc(sendbuf, frameSize * sizeof(uint8_t));	// increase frame buffer by 4 Bytes
+	uint8_t *tmpBuf = new uint8_t [frameSize * sizeof(uint8_t)];
+	memcpy(tmpBuf, sendbuf, frameSize * sizeof(uint8_t));
+	delete[] sendbuf;
+
+	sendbuf = new uint8_t [frameSize * sizeof(uint8_t)];
+	memcpy(sendbuf, tmpBuf, frameSize * sizeof(uint8_t));
 	memcpy(&sendbuf[headerSize], l2Payload, payloadSize);
+	delete[] tmpBuf;
+
 
 	// put back the ethertype, note that it has already gone through htons()
 	sendbuf[headerSize-1] = (uint8_t)(eh->ether_type>>8);
