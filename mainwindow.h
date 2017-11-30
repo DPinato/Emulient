@@ -32,7 +32,7 @@ class L3Helper;
 class LinuxSocket;
 
 
-#define DEFAULT_IF	"eth0"
+#define DEFAULT_IF	"lo"
 #define BUF_SIZ	1024
 
 

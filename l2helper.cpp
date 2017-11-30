@@ -35,21 +35,23 @@ void L2Helper::setEtherHeader(ether_header *h) {
 }
 
 void L2Helper::setSrcMac(uint8_t *src) {
-	eh->ether_shost[0] = src[0];
-	eh->ether_shost[1] = src[1];
-	eh->ether_shost[2] = src[2];
-	eh->ether_shost[3] = src[3];
-	eh->ether_shost[4] = src[4];
-	eh->ether_shost[5] = src[5];
+    memcpy(srcMac, src, 6*sizeof(uint8_t));
+    eh->ether_shost[0] = srcMac[0];
+    eh->ether_shost[1] = srcMac[1];
+    eh->ether_shost[2] = srcMac[2];
+    eh->ether_shost[3] = srcMac[3];
+    eh->ether_shost[4] = srcMac[4];
+    eh->ether_shost[5] = srcMac[5];
 }
 
 void L2Helper::setDstMac(uint8_t *dst) {
-	eh->ether_dhost[0] = dst[0];
-	eh->ether_dhost[1] = dst[1];
-	eh->ether_dhost[2] = dst[2];
-	eh->ether_dhost[3] = dst[3];
-	eh->ether_dhost[4] = dst[4];
-	eh->ether_dhost[5] = dst[5];
+    memcpy(dstMac, dst, 6*sizeof(uint8_t));
+    eh->ether_dhost[0] = dstMac[0];
+    eh->ether_dhost[1] = dstMac[1];
+    eh->ether_dhost[2] = dstMac[2];
+    eh->ether_dhost[3] = dstMac[3];
+    eh->ether_dhost[4] = dstMac[4];
+    eh->ether_dhost[5] = dstMac[5];
 }
 
 void L2Helper::setEtherType(uint16_t eType) {

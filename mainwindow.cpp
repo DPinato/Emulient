@@ -194,12 +194,12 @@ void MainWindow::sendFrame() {
 	qDebug() << "frame size: " << testL2->getFrameSize();
 //	testL3->showSendBuf(testL3->getL3PayloadSize() + testL3->getIHL()*4);	// show L3 buffer, DEBUG
 
-//	for (int i = 0; i < testL2->getFrameSize(); i+=4) {
-//		qDebug() << QString::number(testL2->getSendbuf()[i], 16) << "\t"
-//				 << QString::number(testL2->getSendbuf()[i+1], 16) << "\t"
-//				 << QString::number(testL2->getSendbuf()[i+2], 16) << "\t"
-//				 << QString::number(testL2->getSendbuf()[i+3], 16);
-//	}
+    for (int i = 0; i < testL2->getFrameSize(); i+=4) {
+        qDebug() << QString::number(testL2->getSendbuf()[i], 16) << "\t"
+                 << QString::number(testL2->getSendbuf()[i+1], 16) << "\t"
+                 << QString::number(testL2->getSendbuf()[i+2], 16) << "\t"
+                 << QString::number(testL2->getSendbuf()[i+3], 16);
+    }
 
 
 	int txLen = testL2->getFrameSize();   // transmission length
