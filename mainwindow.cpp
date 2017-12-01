@@ -133,6 +133,46 @@ void MainWindow::sendFrame() {
 
 	} else {
 		// use the parameters in the boxes
+
+
+        if (ui->l3PayloadCheckBox->isChecked()) {
+            // do this first, because setL3Payload() will reset the buffer
+            // take L3 payload from textedit, if this is not checked packet will be empty
+            std::string l3payload = ui->l3payloadEdit->toPlainText().toStdString();
+            int l3_length = ceil((int)l3payload.length()/2.0);
+            uint8_t *l3PayloadHex = new uint8_t [l3_length*sizeof(uint8_t)];
+            int index3 = 0;
+
+            qDebug() << "l3payload: " << QString(l3payload.c_str());
+
+            // use what is inside the L3 custom frame box
+            for (int i = 0; i < (int)l3payload.length()-1; i+=2) {
+                // TODO: need to do error checking here
+                // the contents of l2payloadEdit are in HEX, meaning that 2 characters make 1 Byte
+                l3PayloadHex[index3] = (uint8_t)strtoul(l3payload.substr(i, 2).c_str(), NULL, 16);
+                qDebug() << "index3: " << index3 << "\tl3payload str: " << l3payload.substr(i, 2).c_str();
+                qDebug() << "l3PayloadHex: " << l3PayloadHex[index3];
+                index3++;
+            }
+
+            if ((int)l3payload.length() % 2 == 1) {
+                uint16_t tmp = (uint16_t)strtoul(l3payload.substr(l3payload.length()-1, 1).c_str(), NULL, 16);
+                l3PayloadHex[index3] = tmp<<4;
+                qDebug() << "index: " << index3 << "\tl3PayloadHex str: " << tmp;
+                qDebug() << "l3PayloadHex: " << l3PayloadHex[index3];
+            }
+
+
+            testL3->setL3Payload(l3PayloadHex, l3_length);	// put L3 payload in the L3Helper
+            delete[] l3PayloadHex;
+
+            qDebug() << "l3PayloadHex length: " << testL3->getL3PayloadSize();
+            qDebug() << "checksum: " << testL3->computeIPv4Checksum();
+            qDebug() << "verify checksum: " << testL3->verifyIPv4Checksum();
+
+        }
+
+
 		// L3 STUFF
 //		testL3->init();
 		testL3->setVersion((uint8_t)ui->verEdit->text().toUInt(NULL, 16));
@@ -150,41 +190,6 @@ void MainWindow::sendFrame() {
 		testL3->setDstIP(L3Helper::ip4To32bitUint(ui->dstIPEdit->text().toStdString()));
 
 
-		if (ui->l3PayloadCheckBox->isChecked()) {
-			// take L3 payload from textedit, if this is not checked packet will be empty
-			std::string l3payload = ui->l3payloadEdit->toPlainText().toStdString();
-			int l3_length = ceil((int)l3payload.length()/2.0);
-			uint8_t *l3PayloadHex = new uint8_t [l3_length*sizeof(uint8_t)];
-			int index3 = 0;
-
-			qDebug() << "l3payload: " << QString(l3payload.c_str());
-
-			// use what is inside the L3 custom frame box
-			for (int i = 0; i < (int)l3payload.length()-1; i+=2) {
-				// TODO: need to do error checking here
-				// the contents of l2payloadEdit are in HEX, meaning that 2 characters make 1 Byte
-				l3PayloadHex[index3] = (uint8_t)strtoul(l3payload.substr(i, 2).c_str(), NULL, 16);
-				qDebug() << "index3: " << index3 << "\tl3payload str: " << l3payload.substr(i, 2).c_str();
-				qDebug() << "l3PayloadHex: " << l3PayloadHex[index3];
-				index3++;
-			}
-
-			if ((int)l3payload.length() % 2 == 1) {
-				uint16_t tmp = (uint16_t)strtoul(l3payload.substr(l3payload.length()-1, 1).c_str(), NULL, 16);
-				l3PayloadHex[index3] = tmp<<4;
-				qDebug() << "index: " << index3 << "\tl3PayloadHex str: " << tmp;
-				qDebug() << "l3PayloadHex: " << l3PayloadHex[index3];
-			}
-
-
-			testL3->setL3Payload(l3PayloadHex, l3_length);	// put L3 payload in the L3Helper
-			delete[] l3PayloadHex;
-
-			qDebug() << "l3PayloadHex length: " << testL3->getL3PayloadSize();
-			qDebug() << "checksum: " << testL3->computeIPv4Checksum();
-			qDebug() << "verify checksum: " << testL3->verifyIPv4Checksum();
-
-		}
 
 		updateIPv4Checksum();	// update GUI with checksum
 		int l2PayloadSize = testL3->getL3PayloadSize() + testL3->getIHL()*4;
@@ -198,15 +203,15 @@ void MainWindow::sendFrame() {
 
 
 	qDebug() << "frame size: " << testL2->getFrameSize();
-//	testL3->showSendBuf(testL3->getL3PayloadSize() + testL3->getIHL()*4);	// show L3 buffer, DEBUG
+//    testL3->showSendBuf(testL3->getL3PayloadSize() + testL3->getIHL()*4);	// show L3 buffer, DEBUG
 
-/*	for (int i = 0; i < testL2->getFrameSize(); i+=4) {
+    for (int i = 0; i < testL2->getFrameSize(); i+=4) {
 		qDebug() << QString::number(testL2->getSendbuf()[i], 16) << "\t"
 				 << QString::number(testL2->getSendbuf()[i+1], 16) << "\t"
 				 << QString::number(testL2->getSendbuf()[i+2], 16) << "\t"
 				 << QString::number(testL2->getSendbuf()[i+3], 16);
 	}
-*/
+
 
 	int txLen = testL2->getFrameSize();   // transmission length
 

@@ -75,13 +75,13 @@ void L2Helper::setPayload(uint8_t *data, int size) {
 	// avoid using realloc()
 //	sendbuf = (uint8_t *)realloc(sendbuf, frameSize * sizeof(uint8_t));
 	uint8_t *tmpBuf = new uint8_t [headerSize];	// temporary buffer while we enlarge sendbuf
-	memcpy(tmpBuf, sendbuf, headerSize);		// copy header in temporary buffer
+    memcpy(tmpBuf, sendbuf, headerSize);		// copy header in temporary buffer
 	delete[] sendbuf;
 
 	sendbuf = new uint8_t [frameSize];		// enlarge sendbuf
+    eh = (struct ether_header *) sendbuf;
 	memcpy(sendbuf, tmpBuf, headerSize);	// copy header
 	memcpy(&sendbuf[headerSize * sizeof(uint8_t)], l2Payload, payloadSize);	// copy payload
-
 	delete[] tmpBuf;
 
 }
@@ -109,6 +109,7 @@ void L2Helper::setDot1qHeader(uint16_t tpid, uint8_t pcp, uint8_t dei, uint16_t 
 	delete[] sendbuf;
 
 	sendbuf = new uint8_t [frameSize * sizeof(uint8_t)];
+    eh = (struct ether_header *) sendbuf;
 	memcpy(sendbuf, tmpBuf, frameSize * sizeof(uint8_t));
 	memcpy(&sendbuf[headerSize], l2Payload, payloadSize);
 	delete[] tmpBuf;

@@ -65,18 +65,26 @@ void L3Helper::setFlags(uint16_t f) {
 	// 3 left-most bit of fragment offset
 	// since the whole field is 16-bits, it is probably easier to treat this as
 	// 16 bits too, and use htons()
+    // REMEMBER frag_off has been htons()ed
+    iph->frag_off = iph->frag_off & 0xFF1F;	// zero out the 3 left-most bits
 	if (f < 8) {
-		iph->frag_off = iph->frag_off & 0x1FFF;	// zero out the 3 left-most bits
-		iph->frag_off += htons((f<<13));
-	}
+        // flag is 3-bit wide
+        qDebug() << "iph->frag_off: " << QString::number(iph->frag_off, 16);
+
+        iph->frag_off += htons(f<<5);
+        qDebug() << "no htons(): " << QString::number((f<<13), 16);
+        qDebug() << "htons(): " << QString::number(htons(f<<13), 16);
+
+    }
 }
 
 void L3Helper::setFragOffset(uint16_t f) {
 	// 15 right-most bits of fragment offset
+    iph->frag_off = iph->frag_off & 0x00E0; // set fragment offset to zero
+
 	if (f < 0x2000) {
-		iph->frag_off = iph->frag_off & 0x00E0;	// think about how it would be from setFlags()
 		iph->frag_off += htons(f);
-	}
+    }
 }
 
 void L3Helper::setTTL(uint8_t t) {
@@ -121,6 +129,7 @@ void L3Helper::setL3Payload(uint8_t *data, int size) {
 	delete[] sendbuf;
 
 	sendbuf = new uint8_t [packetSize];
+    iph = (struct iphdr *) sendbuf;
 	memcpy(sendbuf, tmpBuf, headerSize);
 	memcpy(&sendbuf[headerSize * sizeof(uint8_t)], l3Payload, payloadSize);	// copy l3Payload in sendbuf
 
