@@ -14,7 +14,9 @@ L3Helper::L3Helper(int headerLength) {
 	sendbuf[0] = (version<<4) + ihl;
 //	qDebug() << "sendbuf[0]: " << (uint8_t)sendbuf[0];
 
-	payloadSize = 0;	// initialise
+	// initialise
+	payloadSize = 0;
+	packetSize = ihl*4;
 
 }
 
@@ -65,26 +67,26 @@ void L3Helper::setFlags(uint16_t f) {
 	// 3 left-most bit of fragment offset
 	// since the whole field is 16-bits, it is probably easier to treat this as
 	// 16 bits too, and use htons()
-    // REMEMBER frag_off has been htons()ed
-    iph->frag_off = iph->frag_off & 0xFF1F;	// zero out the 3 left-most bits
+	// REMEMBER frag_off has been htons()ed
+	iph->frag_off = iph->frag_off & 0xFF1F;	// zero out the 3 left-most bits
 	if (f < 8) {
-        // flag is 3-bit wide
-        qDebug() << "iph->frag_off: " << QString::number(iph->frag_off, 16);
+		// flag is 3-bit wide
+		iph->frag_off += htons(f<<13);
+//		qDebug() << "htons(): " << QString::number(htons(f<<13), 16);
 
-        iph->frag_off += htons(f<<5);
-        qDebug() << "no htons(): " << QString::number((f<<13), 16);
-        qDebug() << "htons(): " << QString::number(htons(f<<13), 16);
-
-    }
+	}
 }
 
 void L3Helper::setFragOffset(uint16_t f) {
 	// 15 right-most bits of fragment offset
-    iph->frag_off = iph->frag_off & 0x00E0; // set fragment offset to zero
+	iph->frag_off = iph->frag_off & 0x00E0; // set fragment offset to zero
+//	qDebug() << "setFragOffset, iph->frag_off: " << QString::number(iph->frag_off, 16);
 
 	if (f < 0x2000) {
 		iph->frag_off += htons(f);
-    }
+//		qDebug() << "htons(): " << QString::number(htons(f), 16);
+
+	}
 }
 
 void L3Helper::setTTL(uint8_t t) {
@@ -117,10 +119,10 @@ void L3Helper::setL3Payload(uint8_t *data, int size) {
 
 	// change the size of sendbuf, since it needs to include the L3 payload
 	packetSize = (headerSize + payloadSize) * sizeof(uint8_t);
-	qDebug() << "setL3PayloadSize(), packetSize: "<< packetSize
+/*	qDebug() << "setL3PayloadSize(), packetSize: "<< packetSize
 			 << "\theaderSize: " << headerSize
 			 << "\tpayloadSize: " << payloadSize;
-
+*/
 
 	// avoid using realloc()
 //	sendbuf = (uint8_t *)realloc(sendbuf, tmpSize*sizeof(uint8_t));
@@ -129,7 +131,7 @@ void L3Helper::setL3Payload(uint8_t *data, int size) {
 	delete[] sendbuf;
 
 	sendbuf = new uint8_t [packetSize];
-    iph = (struct iphdr *) sendbuf;
+	iph = (struct iphdr *) sendbuf;
 	memcpy(sendbuf, tmpBuf, headerSize);
 	memcpy(&sendbuf[headerSize * sizeof(uint8_t)], l3Payload, payloadSize);	// copy l3Payload in sendbuf
 
@@ -159,6 +161,10 @@ uint8_t *L3Helper::getL3Payload() {
 
 int L3Helper::getL3PayloadSize() {
 	return payloadSize;
+}
+
+int L3Helper::getPacketSize() {
+	return packetSize;
 }
 
 uint32_t L3Helper::ip4To32bitUint(std::string ip) {

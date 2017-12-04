@@ -22,6 +22,7 @@
 #include <QMainWindow>
 #include <QDebug>
 #include <QString>
+#include <QVector>
 
 #include "utilities.h"
 #include "l2helper.h"
@@ -33,7 +34,7 @@ class L3Helper;
 class LinuxSocket;
 
 
-#define DEFAULT_IF	"lo"
+#define DEFAULT_IF	"eth0"
 #define BUF_SIZ	1024
 
 
@@ -75,6 +76,8 @@ private slots:
 	void on_dot1qCheckBox_clicked(bool checked);
 	void on_l3PayloadCheckBox_clicked(bool checked);
 
+	void on_saveEdit_textChanged(const QString &arg1);
+
 private:
 	Ui::MainWindow *ui;
 
@@ -83,6 +86,20 @@ private:
 	L3Helper *testL3;
 
 	int length;		// size of Layer 2 payload
+
+
+	// struct to hold history of frames sent as well as saving/loading frames from disk
+	struct singleFrame {	// I really do not know what to call this
+		QString title;	// title of this frame (should not exceed 30 characters)
+		uint8_t *buffer;	// contains full frame, L2 header + L2 payload
+		int length;			// length of full frame
+
+		// ignore the below, I do not want to go for a deepcopy just yet
+//		L3Helper *l3p;		// pointer to the L3Helper
+//		L2Helper *l2p;		// pointer to the L2Helper
+	};
+	QVector<singleFrame> history;	// keep a history of frames that were sent
+	int historySize;				// number of valid elements in the history vector
 
 };
 

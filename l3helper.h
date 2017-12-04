@@ -45,6 +45,7 @@ public:
 	uint8_t getIHL();
 	uint8_t *getL3Payload();
 	int getL3PayloadSize();
+	int getPacketSize();
 
 
 	// other
