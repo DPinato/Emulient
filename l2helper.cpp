@@ -10,6 +10,35 @@ L2Helper::L2Helper() {
 
 }
 
+L2Helper::L2Helper(const L2Helper &obj) {
+	// do a deep copy of the object
+
+	// copy single variables
+	headerSize = obj.headerSize;
+	payloadSize = obj.payloadSize;
+	frameSize = obj.frameSize;
+	srcMacInt = obj.srcMacInt;
+	dstMacInt = obj.dstMacInt;
+	dot1q = obj.dot1q;
+	tpid = obj.tpid;
+	pcp = obj.pcp;
+	dei = obj.dei;
+	vlanID = obj.vlanID;
+
+	// copy pointers/buffers
+	sendbuf = new uint8_t [frameSize * sizeof(uint8_t)];
+	l2Payload = new uint8_t [payloadSize * sizeof(uint8_t)];
+	eh = (struct ether_header *) sendbuf;	// no need to do memcpy() for this, it already points to sendbuf
+	srcMac = new uint8_t [6 * sizeof(uint8_t)];
+	dstMac = new uint8_t [6 * sizeof(uint8_t)];
+
+	memcpy(sendbuf, obj.sendbuf, frameSize * sizeof(uint8_t));
+	memcpy(l2Payload, obj.l2Payload, payloadSize * sizeof(uint8_t));
+	memcpy(srcMac, obj.srcMac, 6 * sizeof(uint8_t));
+	memcpy(dstMac, obj.dstMac, 6 * sizeof(uint8_t));
+
+}
+
 L2Helper::~L2Helper() {
 	delete[] sendbuf;
 	delete eh;
@@ -75,11 +104,11 @@ void L2Helper::setPayload(uint8_t *data, int size) {
 	// avoid using realloc()
 //	sendbuf = (uint8_t *)realloc(sendbuf, frameSize * sizeof(uint8_t));
 	uint8_t *tmpBuf = new uint8_t [headerSize];	// temporary buffer while we enlarge sendbuf
-    memcpy(tmpBuf, sendbuf, headerSize);		// copy header in temporary buffer
+	memcpy(tmpBuf, sendbuf, headerSize);		// copy header in temporary buffer
 	delete[] sendbuf;
 
 	sendbuf = new uint8_t [frameSize];		// enlarge sendbuf
-    eh = (struct ether_header *) sendbuf;
+	eh = (struct ether_header *) sendbuf;
 	memcpy(sendbuf, tmpBuf, headerSize);	// copy header
 	memcpy(&sendbuf[headerSize * sizeof(uint8_t)], l2Payload, payloadSize);	// copy payload
 	delete[] tmpBuf;
@@ -109,7 +138,7 @@ void L2Helper::setDot1qHeader(uint16_t tpid, uint8_t pcp, uint8_t dei, uint16_t 
 	delete[] sendbuf;
 
 	sendbuf = new uint8_t [frameSize * sizeof(uint8_t)];
-    eh = (struct ether_header *) sendbuf;
+	eh = (struct ether_header *) sendbuf;
 	memcpy(sendbuf, tmpBuf, frameSize * sizeof(uint8_t));
 	memcpy(&sendbuf[headerSize], l2Payload, payloadSize);
 	delete[] tmpBuf;

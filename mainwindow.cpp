@@ -44,6 +44,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	history.resize(10);	// max history size 10
 	historySize = 0;
+	framesSent = 0;
+
+	QString tmp = QApplication::arguments().at(0);
+	defHistorySaveFile = tmp.left(tmp.lastIndexOf("/")+1).append("test.txt");
+	qDebug() << defHistorySaveFile;
+
+
 
 
 	// initialise GUI
@@ -55,15 +62,21 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->l3PayloadCheckBox->setChecked(false);
 	on_l3PayloadCheckBox_clicked(false);
 
+	ui->saveButton->setEnabled(false);
 
 
 }
 
 MainWindow::~MainWindow() {
-//	delete testL2;
-//	delete testL3;	// when these 2 are uncommented, it gives a message of "double free or corruption"
-					// where does it come from ??
 	delete ui;
+
+	// delete the history
+	for (int i = 0; i < historySize; i++) {
+		delete history[i].l3p;
+		delete history[i].l2p;
+
+	}
+
 }
 
 void MainWindow::on_sendButton_clicked() {
@@ -228,17 +241,11 @@ void MainWindow::sendFrame() {
 	qDebug() << "\n";
 
 
+	updateHistory(ui->saveEdit->text(), testL3, testL2);
+	framesSent++;
 
-	// record frame
-	history[historySize].title = ui->saveEdit->text();
-	history[historySize].length = testL2->getFrameSize();
 
-	history[historySize].buffer = new uint8_t [history[historySize].length * sizeof(uint8_t)];
-	memcpy(history[historySize].buffer, testL2->getSendbuf(), history[historySize].length * sizeof(uint8_t));
-
-	historySize++;
-	qDebug() << "historySize: " << historySize;
-
+	ui->saveEdit->setText("");
 
 
 	delete[] srcMacA;
@@ -384,6 +391,72 @@ void MainWindow::updateIPv4Checksum() {
 
 }
 
+void MainWindow::updateHistory(QString s, L3Helper *l3, L2Helper *l2) {
+	// update the history vector
+	// add new entries until the vector is full, then overwrite the older elements
+	int index = framesSent % history.size();
+
+	history[index].title = s;
+	history[index].l3p = new L3Helper(*l3);
+	history[index].l2p = new L2Helper(*l2);
+
+	if (historySize < history.size()) {	historySize++; }
+
+	qDebug() << "index: " << index << "\tframesSent: " << framesSent << "\thistorySize: " << historySize;
+
+}
+
+bool MainWindow::saveHistoryToFile(QString fileName) {
+	// save frames in the history vector to file
+	QFile file(fileName);
+
+	if (file.open(QIODevice::ReadWrite)) {
+		QTextStream out(&file);
+
+		for (int i = 0; i < historySize; i++) {
+			// save the title give to this frame and the full L2 and L3 send buf
+			out << history.at(i).title;
+			out << ":";
+
+			// L2 payload
+			out << history.at(i).l2p->getFrameSize();
+			out << ":";
+
+			for (int j = 0; j < history.at(i).l2p->getFrameSize(); j++) {
+				uint8_t n = history.at(i).l2p->getSendbuf()[j];
+				out << QString::number(n, 16).rightJustified(2, '0');
+			}
+
+
+			// L3 payload
+			out << ":";
+			out << history.at(i).l3p->getPacketSize();
+			out << ":";
+
+			for (int j = 0; j < history.at(i).l3p->getPacketSize(); j++) {
+				uint8_t n = history.at(i).l3p->getSendbuf()[j];
+				out << QString::number(n, 16).rightJustified(2, '0');
+			}
+
+			out << "\n";
+
+		}
+
+		file.close();
+
+	} else {
+		return false;
+	}
+
+
+	return true;	// everything went ok
+
+}
+
+bool MainWindow::loadHistoryFromFile(QString fileName) {
+
+}
+
 void MainWindow::on_runMacTableButton_clicked() {
 	macAddressTableTest();
 }
@@ -519,4 +592,8 @@ void MainWindow::on_saveEdit_textChanged(const QString &arg1) {
 	} else {
 		ui->saveButton->setEnabled(true);
 	}
+}
+
+void MainWindow::on_actionSave_triggered() {
+	saveHistoryToFile(defHistorySaveFile);
 }

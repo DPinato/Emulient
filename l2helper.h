@@ -16,6 +16,8 @@ class L2Helper
 {
 public:
 	L2Helper();
+	L2Helper(const L2Helper &obj);	// create a copy of obj
+
 	~L2Helper();
 
 	// SET
@@ -51,17 +53,17 @@ public:
 private:
 	uint8_t *sendbuf;		// complete L2 frame, header + payload
 
-	uint8_t *l2Payload;	// payload of the L2 frame, this is closer to binary
-	int headerSize;		// makes it easy when 802.1Q is used
-	int payloadSize;	// size of payload, L2 payload
-	int frameSize;		// size of the whole frame, L2 header + L2 payload
+	uint8_t *l2Payload;		// payload of the L2 frame, this is closer to binary
+	int headerSize;			// makes it easy when 802.1Q is used
+	int payloadSize;		// size of payload, L2 payload
+	int frameSize;			// size of the whole frame, L2 header + L2 payload
 
 	struct ether_header *eh;
 
-	uint8_t *srcMac;    // store MAC address as a 6-element array
+	uint8_t *srcMac;		// store MAC address as a 6-element array
 	uint8_t *dstMac;
 
-	uint64_t srcMacInt; // store MAC address as a 48-bit uint
+	uint64_t srcMacInt;		// store MAC address as a 48-bit uint
 	uint64_t dstMacInt;
 
 	// for 802.1Q header

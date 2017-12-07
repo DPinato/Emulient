@@ -23,6 +23,8 @@
 #include <QDebug>
 #include <QString>
 #include <QVector>
+#include <QFile>
+#include <QTextStream>
 
 #include "utilities.h"
 #include "l2helper.h"
@@ -57,7 +59,11 @@ private slots:
 	void sendFrame();
 	void macAddressTableTest();
 	void updateIPv4Checksum();
+	void updateHistory(QString s, L3Helper *l3, L2Helper *l2);
+	bool saveHistoryToFile(QString fileName);
+	bool loadHistoryFromFile(QString fileName);
 
+	// slots from GUI objects
 	void on_l2PayloadCheckBox_clicked(bool checked);
 	void on_autoComputeCheckBox_clicked(bool checked);
 	void on_verEdit_editingFinished();
@@ -75,8 +81,9 @@ private slots:
 	void on_dstIPEdit_editingFinished();
 	void on_dot1qCheckBox_clicked(bool checked);
 	void on_l3PayloadCheckBox_clicked(bool checked);
-
 	void on_saveEdit_textChanged(const QString &arg1);
+
+	void on_actionSave_triggered();
 
 private:
 	Ui::MainWindow *ui;
@@ -91,15 +98,19 @@ private:
 	// struct to hold history of frames sent as well as saving/loading frames from disk
 	struct singleFrame {	// I really do not know what to call this
 		QString title;	// title of this frame (should not exceed 30 characters)
-		uint8_t *buffer;	// contains full frame, L2 header + L2 payload
-		int length;			// length of full frame
 
-		// ignore the below, I do not want to go for a deepcopy just yet
-//		L3Helper *l3p;		// pointer to the L3Helper
-//		L2Helper *l2p;		// pointer to the L2Helper
+		L3Helper *l3p;		// L3Helper object
+		L2Helper *l2p;		// L2Helper object
 	};
 	QVector<singleFrame> history;	// keep a history of frames that were sent
 	int historySize;				// number of valid elements in the history vector
+	int framesSent;					// counts total frames sent;
+
+
+	// default parameters
+	QString defHistorySaveFile;		// default history save file, in the same directory as argv[0]
+	QString defHistoryLoadFile;		// default history load file, in the same directory as argv[0]
+
 
 };
 

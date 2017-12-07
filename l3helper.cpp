@@ -20,6 +20,26 @@ L3Helper::L3Helper(int headerLength) {
 
 }
 
+L3Helper::L3Helper(const L3Helper &obj) {
+	// do a deep copy of the object
+
+	// copy single variables
+	headerSize = obj.headerSize;
+	payloadSize = obj.payloadSize;
+	packetSize = obj.packetSize;
+	version = obj.version;
+	ihl = obj.ihl;
+
+	// copy pointers/buffers
+	sendbuf = new uint8_t [packetSize * sizeof(uint8_t)];
+	l3Payload = new uint8_t [payloadSize * sizeof(uint8_t)];
+	iph = (struct iphdr *) sendbuf;	// no need to do memcpy() for this, it already points to sendbuf
+
+	memcpy(sendbuf, obj.sendbuf, packetSize * sizeof(uint8_t));
+	memcpy(l3Payload, obj.l3Payload, payloadSize * sizeof(uint8_t));
+
+}
+
 L3Helper::~L3Helper() {
 	delete[] sendbuf;
 	delete[] l3Payload;

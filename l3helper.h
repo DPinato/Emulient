@@ -15,6 +15,8 @@ class L3Helper
 {
 public:
 	L3Helper(int headerLength);
+	L3Helper(const L3Helper &obj);
+
 	~L3Helper();
 
 
@@ -60,7 +62,7 @@ public:
 
 
 private:
-	uint8_t *sendbuf;		// L3 header + L3 payload
+	uint8_t *sendbuf;	// L3 header + L3 payload
 						// its size is IHL until setL3PayloadSize() is called
 	uint8_t *l3Payload;	// L3 payload
 	int headerSize;		// size of L3 header
