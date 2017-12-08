@@ -37,7 +37,7 @@ bool Utilities::checkMacAddress(std::string mac) {
 
 }
 
-bool Utilities::intToMacAddress(uint64_t mac, uint8_t *ptr) {
+uint8_t* Utilities::intToMacAddress(uint64_t mac, uint8_t *ptr) {
 	// convert the 64-bit integer mac to an array of 8-bit elements
 	for (int i = 0; i < 6; i++) {
 		uint8_t tmp;
@@ -70,6 +70,19 @@ std::string Utilities::intToMacAddress(uint64_t mac) {
 //    qDebug() << "t: " << t.c_str();
 
 	return t;
+
+}
+
+std::string Utilities::arrayToMacAddressStr(uint8_t *ptr) {
+    // take a 6-element array that forms a MAC address and transform it into a string
+    std::string tmp = "";
+
+    for(int i = 0; i < 6; i++) {
+        tmp.append(QString::number(ptr[i], 16).rightJustified(2, '0').toStdString());
+        if (i < 5) { tmp.append(":"); }
+    }
+
+    return tmp;
 
 }
 

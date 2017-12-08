@@ -6,7 +6,15 @@ L2Helper::L2Helper() {
 	sendbuf = new uint8_t [frameSize * sizeof(uint8_t)];	// this holds the whole L2 header + L2 payload
 	eh = (struct ether_header *) sendbuf;
 	payloadSize = 0;
+
+
+	// initialise these just in case
 	dot1q = false;
+	vlanID = 0;
+	tpid = 0;
+	pcp = 0;
+	dei = 0;
+	etherTypeVar = 0;
 
 }
 
@@ -24,6 +32,7 @@ L2Helper::L2Helper(const L2Helper &obj) {
 	pcp = obj.pcp;
 	dei = obj.dei;
 	vlanID = obj.vlanID;
+	etherTypeVar = obj.etherTypeVar;
 
 	// copy pointers/buffers
 	sendbuf = new uint8_t [frameSize * sizeof(uint8_t)];
@@ -81,7 +90,8 @@ void L2Helper::setDstMac(uint8_t *dst) {
 }
 
 void L2Helper::setEtherType(uint16_t eType) {
-	eh->ether_type = htons(eType);
+	etherTypeVar = eType;
+	eh->ether_type = htons(etherTypeVar);
 }
 
 void L2Helper::setPayload(uint8_t *data, int size) {
@@ -115,13 +125,13 @@ void L2Helper::setPayload(uint8_t *data, int size) {
 
 }
 
-void L2Helper::setDot1qHeader(uint16_t tpid, uint8_t pcp, uint8_t dei, uint16_t vlanID) {
+void L2Helper::setDot1qHeader(uint16_t tpidV, uint8_t pcpV, uint8_t deiV, uint16_t vlanIDV) {
 	// insert the 802.1Q header right after the source MAC address
 	// this should be run before setPayload()
-	tpid = tpid;
-	pcp = pcp;
-	dei = dei;
-	vlanID = vlanID;
+	tpid = tpidV;
+	pcp = pcpV;
+	dei = deiV;
+	vlanID = vlanIDV;
 	dot1q = true;
 
 	// move over the L2 payload by 4 bytes
@@ -179,7 +189,7 @@ uint8_t *L2Helper::getDstMac() {
 }
 
 uint16_t L2Helper::getEtherType() {
-	return eh->ether_type;
+	return etherTypeVar;
 }
 
 uint8_t *L2Helper::getSendbuf() {

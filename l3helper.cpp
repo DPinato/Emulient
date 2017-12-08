@@ -57,6 +57,7 @@ void L3Helper::setIHL(uint8_t l) {
 
 void L3Helper::setDSCP(uint8_t d) {
 	// 6 left-most bits of TOS
+	dscp = d;
 	if (d < 0x40) {
 		iph->tos = iph->tos & 0x02;	// zero out the 6 left-most bits
 		iph->tos += (d<<2);
@@ -65,6 +66,7 @@ void L3Helper::setDSCP(uint8_t d) {
 
 void L3Helper::setECN(uint8_t e) {
 	// 2 right-most bits of TOS
+	ecn = e;
 	if (e < 4) {
 		iph->tos = iph->tos & 0xFC;	// zero out the 6 left-most bits
 		iph->tos += (e);
@@ -88,6 +90,7 @@ void L3Helper::setFlags(uint16_t f) {
 	// since the whole field is 16-bits, it is probably easier to treat this as
 	// 16 bits too, and use htons()
 	// REMEMBER frag_off has been htons()ed
+	flags = f;
 	iph->frag_off = iph->frag_off & 0xFF1F;	// zero out the 3 left-most bits
 	if (f < 8) {
 		// flag is 3-bit wide
@@ -99,6 +102,7 @@ void L3Helper::setFlags(uint16_t f) {
 
 void L3Helper::setFragOffset(uint16_t f) {
 	// 15 right-most bits of fragment offset
+	frag = f;
 	iph->frag_off = iph->frag_off & 0x00E0; // set fragment offset to zero
 //	qDebug() << "setFragOffset, iph->frag_off: " << QString::number(iph->frag_off, 16);
 
@@ -173,6 +177,22 @@ uint8_t L3Helper::getVersion() {
 
 uint8_t L3Helper::getIHL() {
 	return ihl;
+}
+
+uint8_t L3Helper::getDSCP() {
+	return dscp;
+}
+
+uint8_t L3Helper::getECN() {
+	return ecn;
+}
+
+uint16_t L3Helper::getFlags() {
+	return flags;
+}
+
+uint16_t L3Helper::getFragOffset() {
+	return frag;
 }
 
 uint8_t *L3Helper::getL3Payload() {

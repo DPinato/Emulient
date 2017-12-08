@@ -25,6 +25,7 @@
 #include <QVector>
 #include <QFile>
 #include <QTextStream>
+#include <QByteArray>
 
 #include "utilities.h"
 #include "l2helper.h"
@@ -62,6 +63,9 @@ private slots:
 	void updateHistory(QString s, L3Helper *l3, L2Helper *l2);
 	bool saveHistoryToFile(QString fileName);
 	bool loadHistoryFromFile(QString fileName);
+	bool loadFrameFromHistory(int index);
+	void updateFrameGUI(L3Helper *l3, L2Helper *l2);
+
 
 	// slots from GUI objects
 	void on_l2PayloadCheckBox_clicked(bool checked);
@@ -81,9 +85,9 @@ private slots:
 	void on_dstIPEdit_editingFinished();
 	void on_dot1qCheckBox_clicked(bool checked);
 	void on_l3PayloadCheckBox_clicked(bool checked);
-	void on_saveEdit_textChanged(const QString &arg1);
-
 	void on_actionSave_triggered();
+
+	void on_loadButton_clicked();
 
 private:
 	Ui::MainWindow *ui;

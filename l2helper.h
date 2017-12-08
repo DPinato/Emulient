@@ -27,8 +27,7 @@ public:
 	void setDstMac(uint8_t *dst);
 	void setEtherType(uint16_t eType);
 	void setPayload(uint8_t *data, int size);
-
-	void setDot1qHeader(uint16_t tpid, uint8_t pcp, uint8_t dei, uint16_t vlanID);
+	void setDot1qHeader(uint16_t tpidV, uint8_t pcpV, uint8_t deiV, uint16_t vlanIDV);
 
 
 	// GET
@@ -72,6 +71,8 @@ private:
 	uint8_t pcp;		// 3 bits
 	uint8_t dei;		// 1 bit
 	uint16_t vlanID;	// 12 bits
+
+	uint16_t etherTypeVar;	// this because when 802.1Q is added ethetType will change place completely
 
 };
 

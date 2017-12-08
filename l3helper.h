@@ -45,6 +45,10 @@ public:
 	uint8_t *getSendbuf();
 	uint8_t getVersion();
 	uint8_t getIHL();
+	uint8_t getDSCP();
+	uint8_t getECN();
+	uint16_t getFlags();
+	uint16_t getFragOffset();
 	uint8_t *getL3Payload();
 	int getL3PayloadSize();
 	int getPacketSize();
@@ -75,6 +79,10 @@ private:
 	// I think its because the iphdr struct does not have an entry for version
 	uint8_t version;
 	uint8_t ihl;
+	uint8_t dscp;
+	uint8_t ecn;
+	uint16_t flags;
+	uint16_t frag;
 
 };
 
