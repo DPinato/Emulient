@@ -29,6 +29,10 @@ L3Helper::L3Helper(const L3Helper &obj) {
 	packetSize = obj.packetSize;
 	version = obj.version;
 	ihl = obj.ihl;
+	dscp = obj.dscp;
+	ecn = obj.ecn;
+	flags = obj.flags;
+	frag = obj.frag;
 
 	// copy pointers/buffers
 	sendbuf = new uint8_t [packetSize * sizeof(uint8_t)];
@@ -67,7 +71,7 @@ void L3Helper::setDSCP(uint8_t d) {
 void L3Helper::setECN(uint8_t e) {
 	// 2 right-most bits of TOS
 	ecn = e;
-	if (e < 4) {
+	if (e < 3) {
 		iph->tos = iph->tos & 0xFC;	// zero out the 6 left-most bits
 		iph->tos += (e);
 	}

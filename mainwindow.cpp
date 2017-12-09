@@ -25,7 +25,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	delete testU;
 
+
+
+	std::string debugIP = Utilities::intToIPAddressStr(182982658);	// 10.232.24.2
+	qDebug() << QString(debugIP.c_str());
+	qDebug() << Utilities::ipAddressStrToInt(debugIP);
+
+
+	uint32_t debugIPInt = Utilities::ipAddressStrToInt("255.255.255.255");
+	qDebug() << debugIPInt;
+	qDebug() << QString(Utilities::intToIPAddressStr(debugIPInt).c_str());
+
 */
+
 
 
 	// TECHNICALLY the minimum size of a frame is the L2 header
@@ -241,7 +253,9 @@ void MainWindow::sendFrame() {
 	qDebug() << "\n";
 
 
-	updateHistory(ui->saveEdit->text(), testL3, testL2);
+	updateHistory(ui->saveEdit->text(), testL3, testL2,
+				  ui->l3PayloadCheckBox->isChecked(), ui->l2PayloadCheckBox->isChecked());
+
 	framesSent++;
 
 	ui->saveEdit->setText("");
@@ -394,7 +408,7 @@ void MainWindow::updateIPv4Checksum() {
 
 }
 
-void MainWindow::updateHistory(QString s, L3Helper *l3, L2Helper *l2) {
+void MainWindow::updateHistory(QString s, L3Helper *l3, L2Helper *l2, bool l3Flag, bool l2Flag) {
 	// update the history vector
 	// add new entries until the vector is full, then overwrite the older elements
 	int index = framesSent % history.size();
@@ -402,6 +416,8 @@ void MainWindow::updateHistory(QString s, L3Helper *l3, L2Helper *l2) {
 	history[index].title = s;
 	history[index].l3p = new L3Helper(*l3);
 	history[index].l2p = new L2Helper(*l2);
+	history[index].hasL3Payload = l3Flag;
+	history[index].hasL2Payload = l2Flag;
 
 	if (historySize < history.size()) {	historySize++; }
 
@@ -487,7 +503,7 @@ bool MainWindow::loadFrameFromHistory(int index) {
 
 
     // show values in GUI
-    updateFrameGUI(testL3, testL2);
+    updateFrameGUI(testL3, testL2, history[index].hasL3Payload, history[index].hasL2Payload);
     ui->saveEdit->setText(history.at(index).title);
 
 
@@ -495,8 +511,9 @@ bool MainWindow::loadFrameFromHistory(int index) {
 
 }
 
-void MainWindow::updateFrameGUI(L3Helper *l3, L2Helper *l2) {
+void MainWindow::updateFrameGUI(L3Helper *l3, L2Helper *l2, bool l3Flag, bool l2Flag) {
     // show the contents of the L3Helper and L2Helper objects in the GUI
+    // l2Flag and l3Flag show whether the frame was built with a l2 or l3 custom payload
 
     // L2 stuff
     ui->srcMacEdit->setText(
@@ -517,7 +534,9 @@ void MainWindow::updateFrameGUI(L3Helper *l3, L2Helper *l2) {
     ui->dot1qCheckBox->setChecked(l2->hasDot1Q());
     on_dot1qCheckBox_clicked(l2->hasDot1Q());
 
-    ui->l2PayloadCheckBox->setChecked(false);
+    ui->l2PayloadCheckBox->setChecked(l2Flag);
+    on_l2PayloadCheckBox_clicked(l2Flag);
+
 
     QString tmpL2 = "";       // show l2 payload
     for (int i = 0; i < l2->getPayloadSize(); i++) {
@@ -542,13 +561,14 @@ void MainWindow::updateFrameGUI(L3Helper *l3, L2Helper *l2) {
     ui->protocolEdit->setText(QString::number(l3->getIPHeader()->protocol, 16));
     ui->checksumEdit->setText(QString::number(htons(l3->getIPHeader()->check), 16).rightJustified(4, '0'));
 
-    // TODO: put source and destination IP addresses in GUI
+    ui->srcIPEdit->setText(QString(Utilities::intToIPAddressStr(l3->getIPHeader()->saddr).c_str()));
+    ui->dstIPEdit->setText(QString(Utilities::intToIPAddressStr(l3->getIPHeader()->daddr).c_str()));
 
     ui->autoComputeCheckBox->setChecked(true);
     on_autoComputeCheckBox_clicked(true);
 
-
-    ui->l3PayloadCheckBox->setChecked(false);
+    ui->l3PayloadCheckBox->setChecked(l3Flag);
+    on_l3PayloadCheckBox_clicked(l3Flag);
 
     QString tmpL3 = "";       // show l2 payload
     for (int i = 0; i < l3->getL3PayloadSize(); i++) {

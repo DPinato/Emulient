@@ -60,11 +60,11 @@ private slots:
 	void sendFrame();
 	void macAddressTableTest();
 	void updateIPv4Checksum();
-	void updateHistory(QString s, L3Helper *l3, L2Helper *l2);
+	void updateHistory(QString s, L3Helper *l3, L2Helper *l2, bool l3Flag, bool l2Flag);
 	bool saveHistoryToFile(QString fileName);
 	bool loadHistoryFromFile(QString fileName);
 	bool loadFrameFromHistory(int index);
-	void updateFrameGUI(L3Helper *l3, L2Helper *l2);
+	void updateFrameGUI(L3Helper *l3, L2Helper *l2, bool l3Flag, bool l2Flag);
 
 
 	// slots from GUI objects
@@ -105,6 +105,10 @@ private:
 
 		L3Helper *l3p;		// L3Helper object
 		L2Helper *l2p;		// L2Helper object
+
+		bool hasL2Payload;	// true if the l2 payload checkbox is checked
+		bool hasL3Payload;	// true if the L3 payload checkbox is checked
+
 	};
 	QVector<singleFrame> history;	// keep a history of frames that were sent
 	int historySize;				// number of valid elements in the history vector

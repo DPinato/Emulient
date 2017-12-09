@@ -107,3 +107,52 @@ uint64_t Utilities::stringToInt(std::string mac) {
 	return t;
 
 }
+
+std::string Utilities::intToIPAddressStr(uint32_t ip) {
+	// convert 32-bit integer to an IPv4 address string
+	std::string tmp = "";
+	uint32_t tmpIP = ip;
+
+	for (int i = 0; i < 4; i++) {
+		// IPv4 has 4 octets, i.e. it is 4-Bytes wide
+		qDebug() << tmpIP << "\t" << (tmpIP>>(8*(3-i)));
+		tmp.insert(0, std::to_string((tmpIP>>(8*(3-i)))));	// put the value in the string
+		tmpIP &= (0x00FFFFFF>>(i*8));		// zero-out the left most 8 bits, so we can keep right shifting
+
+		if (i < 3) { tmp.insert(0, "."); }
+
+	}
+
+	qDebug() << QString(tmp.c_str());
+	return tmp;
+
+}
+
+uint32_t Utilities::ipAddressStrToInt(std::string ip) {
+	// convert IPv4 address string to 32-bit integer
+	std::string tmpIP = ip;
+	uint32_t tmp = 0;
+	int start = 0;
+	int end = 0;
+
+	for (int i = 0; i < 4; i++) {
+		std::string tmpStr;
+		end = ip.find_first_of(".", start+1);
+
+		if (i == 0) {
+			tmpStr = ip.substr(start, end-start);
+		} else {
+			tmpStr = ip.substr(start+1, end-start-1);
+		}
+
+//		qDebug() << QString(tmpStr.c_str());
+		tmp += ((int)atoi(tmpStr.c_str()))<<(8*(3-i));
+
+		start = end;
+
+	}
+
+	return tmp;
+
+}
+
