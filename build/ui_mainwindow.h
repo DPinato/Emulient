@@ -35,8 +35,8 @@ class Ui_MainWindow
 {
 public:
     QAction *actionOpen;
-    QAction *actionSave;
     QAction *actionQuit;
+    QAction *actionSave_History;
     QWidget *centralWidget;
     QTabWidget *tabWidget;
     QWidget *tab1;
@@ -94,6 +94,9 @@ public:
     QPushButton *loadButton;
     QComboBox *comboBox;
     QLabel *label_25;
+    QLabel *label_26;
+    QComboBox *ifacesComboBox;
+    QLabel *framesSentLabel;
     QWidget *tab2;
     QLabel *label_3;
     QLineEdit *macTableTestEdit;
@@ -104,6 +107,7 @@ public:
     QWidget *tab;
     QMenuBar *menuBar;
     QMenu *menuFile;
+    QMenu *menuSave;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
 
@@ -114,10 +118,10 @@ public:
         MainWindow->resize(700, 732);
         actionOpen = new QAction(MainWindow);
         actionOpen->setObjectName(QStringLiteral("actionOpen"));
-        actionSave = new QAction(MainWindow);
-        actionSave->setObjectName(QStringLiteral("actionSave"));
         actionQuit = new QAction(MainWindow);
         actionQuit->setObjectName(QStringLiteral("actionQuit"));
+        actionSave_History = new QAction(MainWindow);
+        actionSave_History->setObjectName(QStringLiteral("actionSave_History"));
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         tabWidget = new QTabWidget(centralWidget);
@@ -127,7 +131,7 @@ public:
         tab1->setObjectName(QStringLiteral("tab1"));
         sendButton = new QPushButton(tab1);
         sendButton->setObjectName(QStringLiteral("sendButton"));
-        sendButton->setGeometry(QRect(20, 560, 89, 31));
+        sendButton->setGeometry(QRect(20, 600, 89, 31));
         srcMacEdit = new QLineEdit(tab1);
         srcMacEdit->setObjectName(QStringLiteral("srcMacEdit"));
         srcMacEdit->setGeometry(QRect(150, 20, 141, 25));
@@ -342,6 +346,20 @@ public:
         label_25->setObjectName(QStringLiteral("label_25"));
         label_25->setGeometry(QRect(330, 560, 51, 25));
         label_25->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
+        label_26 = new QLabel(tab1);
+        label_26->setObjectName(QStringLiteral("label_26"));
+        label_26->setGeometry(QRect(20, 560, 71, 25));
+        label_26->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
+        ifacesComboBox = new QComboBox(tab1);
+        ifacesComboBox->setObjectName(QStringLiteral("ifacesComboBox"));
+        ifacesComboBox->setGeometry(QRect(100, 560, 131, 31));
+        framesSentLabel = new QLabel(tab1);
+        framesSentLabel->setObjectName(QStringLiteral("framesSentLabel"));
+        framesSentLabel->setGeometry(QRect(120, 600, 81, 31));
+        QFont font;
+        font.setPointSize(14);
+        framesSentLabel->setFont(font);
+        framesSentLabel->setAlignment(Qt::AlignCenter);
         tabWidget->addTab(tab1, QString());
         tab2 = new QWidget();
         tab2->setObjectName(QStringLiteral("tab2"));
@@ -375,6 +393,8 @@ public:
         menuBar->setGeometry(QRect(0, 0, 700, 22));
         menuFile = new QMenu(menuBar);
         menuFile->setObjectName(QStringLiteral("menuFile"));
+        menuSave = new QMenu(menuFile);
+        menuSave->setObjectName(QStringLiteral("menuSave"));
         MainWindow->setMenuBar(menuBar);
         mainToolBar = new QToolBar(MainWindow);
         mainToolBar->setObjectName(QStringLiteral("mainToolBar"));
@@ -385,9 +405,10 @@ public:
 
         menuBar->addAction(menuFile->menuAction());
         menuFile->addAction(actionOpen);
-        menuFile->addAction(actionSave);
+        menuFile->addAction(menuSave->menuAction());
         menuFile->addSeparator();
         menuFile->addAction(actionQuit);
+        menuSave->addAction(actionSave_History);
 
         retranslateUi(MainWindow);
 
@@ -401,8 +422,8 @@ public:
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", Q_NULLPTR));
         actionOpen->setText(QApplication::translate("MainWindow", "Open", Q_NULLPTR));
-        actionSave->setText(QApplication::translate("MainWindow", "Save", Q_NULLPTR));
         actionQuit->setText(QApplication::translate("MainWindow", "Quit", Q_NULLPTR));
+        actionSave_History->setText(QApplication::translate("MainWindow", "Save History", Q_NULLPTR));
         sendButton->setText(QApplication::translate("MainWindow", "SEND", Q_NULLPTR));
         srcMacEdit->setText(QApplication::translate("MainWindow", "08:00:27:48:69:25", Q_NULLPTR));
         label->setText(QApplication::translate("MainWindow", "Src MAC address", Q_NULLPTR));
@@ -463,6 +484,8 @@ public:
         saveEdit->setText(QString());
         loadButton->setText(QApplication::translate("MainWindow", "LOAD FRAME", Q_NULLPTR));
         label_25->setText(QApplication::translate("MainWindow", "Name:", Q_NULLPTR));
+        label_26->setText(QApplication::translate("MainWindow", "Interface:", Q_NULLPTR));
+        framesSentLabel->setText(QApplication::translate("MainWindow", "<sent #>", Q_NULLPTR));
         tabWidget->setTabText(tabWidget->indexOf(tab1), QApplication::translate("MainWindow", "Raw Frame / IPv4", Q_NULLPTR));
         label_3->setText(QApplication::translate("MainWindow", "MAC Table, from", Q_NULLPTR));
         macTableTestEdit->setText(QApplication::translate("MainWindow", "12:34:bb:aa:cc:dd", Q_NULLPTR));
@@ -473,6 +496,7 @@ public:
         tabWidget->setTabText(tabWidget->indexOf(tab2), QApplication::translate("MainWindow", "Stress Tests", Q_NULLPTR));
         tabWidget->setTabText(tabWidget->indexOf(tab), QApplication::translate("MainWindow", "Presets", Q_NULLPTR));
         menuFile->setTitle(QApplication::translate("MainWindow", "File", Q_NULLPTR));
+        menuSave->setTitle(QApplication::translate("MainWindow", "Save", Q_NULLPTR));
     } // retranslateUi
 
 };

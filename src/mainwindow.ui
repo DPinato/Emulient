@@ -34,7 +34,7 @@
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>560</y>
+        <y>600</y>
         <width>89</width>
         <height>31</height>
        </rect>
@@ -896,6 +896,53 @@ p, li { white-space: pre-wrap; }
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
       </property>
      </widget>
+     <widget class="QLabel" name="label_26">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>560</y>
+        <width>71</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Interface:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="ifacesComboBox">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>560</y>
+        <width>131</width>
+        <height>31</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="framesSentLabel">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>600</y>
+        <width>81</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>&lt;sent #&gt;</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab2">
      <attribute name="title">
@@ -1006,8 +1053,14 @@ p, li { white-space: pre-wrap; }
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuSave">
+     <property name="title">
+      <string>Save</string>
+     </property>
+     <addaction name="actionSave_History"/>
+    </widget>
     <addaction name="actionOpen"/>
-    <addaction name="actionSave"/>
+    <addaction name="menuSave"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -1027,14 +1080,14 @@ p, li { white-space: pre-wrap; }
     <string>Open</string>
    </property>
   </action>
-  <action name="actionSave">
-   <property name="text">
-    <string>Save</string>
-   </property>
-  </action>
   <action name="actionQuit">
    <property name="text">
     <string>Quit</string>
+   </property>
+  </action>
+  <action name="actionSave_History">
+   <property name="text">
+    <string>Save History</string>
    </property>
   </action>
  </widget>

@@ -11,6 +11,10 @@
 #include <net/if.h>
 #include <netinet/ether.h>
 #include <netinet/ip.h>
+#include <unistd.h>
+#include <linux/if_link.h>
+#include <stdlib.h>
+#include <ifaddrs.h>
 
 #include <string>
 #include <new>
@@ -65,6 +69,7 @@ private slots:
 	bool loadHistoryFromFile(QString fileName);
 	bool loadFrameFromHistory(int index);
 	void updateFrameGUI(L3Helper *l3, L2Helper *l2, bool l3Flag, bool l2Flag);
+	bool getNetInterfaces();
 
 
 	// slots from GUI objects
@@ -85,9 +90,8 @@ private slots:
 	void on_dstIPEdit_editingFinished();
 	void on_dot1qCheckBox_clicked(bool checked);
 	void on_l3PayloadCheckBox_clicked(bool checked);
-	void on_actionSave_triggered();
-
 	void on_loadButton_clicked();
+	void on_actionSave_History_triggered();
 
 private:
 	Ui::MainWindow *ui;
@@ -118,6 +122,11 @@ private:
 	// default parameters
 	QString defHistorySaveFile;		// default history save file, in the same directory as argv[0]
 	QString defHistoryLoadFile;		// default history load file, in the same directory as argv[0]
+
+
+	// to detect interfaces in the system
+	struct ifaddrs *ifaddr, *ifa;
+	int family, nFam;
 
 
 };

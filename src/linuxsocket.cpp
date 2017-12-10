@@ -1,11 +1,12 @@
 #include "linuxsocket.h"
 
-LinuxSocket::LinuxSocket(uint8_t *mac) {
+LinuxSocket::LinuxSocket(uint8_t *mac, std::string interface) {
 	// initialise the socket object
 	// for testing leave this stuff all here for now
-	setDstMacAddress(mac);	// just in case
+	setDstMacAddress(mac);
 
-	strcpy(ifName, DEFAULT_IF);		// get interface name
+	ifName = interface;
+	qDebug() << "ifName: " << QString(ifName.c_str());
 
 	// Open RAW socket to send on
 	if ((sockfd = socket(AF_PACKET, SOCK_RAW, IPPROTO_RAW)) == -1) {
@@ -15,13 +16,13 @@ LinuxSocket::LinuxSocket(uint8_t *mac) {
 
 	/* Get the index of the interface to send on */
 	memset(&if_idx, 0, sizeof(struct ifreq));
-	strncpy(if_idx.ifr_name, ifName, IFNAMSIZ-1);
+	strncpy(if_idx.ifr_name, ifName.c_str(), IFNAMSIZ-1);
 	if (ioctl(sockfd, SIOCGIFINDEX, &if_idx) < 0) { perror("SIOCGIFINDEX"); }
 
 
 	/* Get the MAC address of the interface to send on */
 	memset(&if_mac, 0, sizeof(struct ifreq));
-	strncpy(if_mac.ifr_name, ifName, IFNAMSIZ-1);
+	strncpy(if_mac.ifr_name, ifName.c_str(), IFNAMSIZ-1);
 	if (ioctl(sockfd, SIOCGIFHWADDR, &if_mac) < 0) { perror("SIOCGIFHWADDR"); }
 
 	socket_address.sll_ifindex = if_idx.ifr_ifindex;	// index of network device

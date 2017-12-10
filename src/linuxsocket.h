@@ -7,7 +7,7 @@
 
 class LinuxSocket {
 public:
-	LinuxSocket(uint8_t *mac);
+	LinuxSocket(uint8_t *mac, std::string interface);
 	~LinuxSocket();
 
 	int send(int length, uint8_t *buffer);		// set the frame constructed
@@ -32,9 +32,9 @@ private:
 	struct ifreq if_mac;
 
 	struct sockaddr_ll socket_address;
-	char ifName[IFNAMSIZ];
+	std::string ifName;
 
-	uint8_t *sockDstMac;	// I am not sure whether this is REALLY needed for the socket
+	uint8_t *sockDstMac;
 
 };
 

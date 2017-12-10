@@ -256,7 +256,7 @@ uint16_t L3Helper::computeIPv4Checksum() {
 	// compute IPv4 checksum according to header
 	// note that this will likely fail if some of the values are simply not present
 	// (different from values not being set properly, maybe header buffer is not allocated properly?)
-	qDebug() << "computeIPv4Checksum()";
+//	qDebug() << "computeIPv4Checksum()";
 	uint32_t tmp = 0;	// this cannot be only 16-bits, since it needs to carry over left-most bits
 	uint16_t header[ihl*2];	// collect header valued in 16-bit uint format
 
@@ -278,7 +278,7 @@ uint16_t L3Helper::computeIPv4Checksum() {
 		tmp = (tmp&0xFFFF) + (tmp>>16);
 	}
 
-	qDebug() << QString::number(~(uint16_t)tmp, 16);
+//	qDebug() << QString::number(~(uint16_t)tmp, 16);
 	return ~(uint16_t)tmp;	// final operation is a NOT
 
 }
@@ -287,7 +287,7 @@ uint16_t L3Helper::verifyIPv4Checksum() {
 	// check whether IPv4 headerchecksum of this header is correct
 	// returns 0 if correct, any other number otherwise
 	// TODO: this looks awfully close to computeIPv4Checksum(), can you do anything about that?
-	qDebug() << "verifyIPv4Checksum()";
+//	qDebug() << "verifyIPv4Checksum()";
 	uint32_t tmp = 0;	// this cannot be only 16-bits, since it needs to carry over left-most bits
 	uint16_t header[ihl*2];	// collect header valued in 16-bit uint format
 

@@ -76,6 +76,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	ui->loadButton->setEnabled(false);	// history should be empty at this point
 
+	getNetInterfaces();
+
 
 }
 
@@ -88,6 +90,8 @@ MainWindow::~MainWindow() {
 //		delete history[i].l2p;
 
 //	}
+
+	freeifaddrs(ifaddr);
 
 }
 
@@ -247,7 +251,8 @@ void MainWindow::sendFrame() {
 	int txLen = testL2->getFrameSize();   // transmission length
 
 	// send frame
-	LinuxSocket *testSock = new LinuxSocket(dstMacA);
+	std::string iface = ui->ifacesComboBox->itemText(ui->ifacesComboBox->currentIndex()).toStdString();
+	LinuxSocket *testSock = new LinuxSocket(dstMacA, iface);
 	testSock->send(txLen, testL2->getSendbuf());
 
 	qDebug() << "\n";
@@ -256,13 +261,12 @@ void MainWindow::sendFrame() {
 	updateHistory(ui->saveEdit->text(), testL3, testL2,
 				  ui->l3PayloadCheckBox->isChecked(), ui->l2PayloadCheckBox->isChecked());
 
+	// update counters
 	framesSent++;
 
+	// update GUI
+	ui->framesSentLabel->setText(QString::number(framesSent));
 	ui->saveEdit->setText("");
-
-
-
-	qDebug() << "VLAN ID: " << testL2->getVlanID();
 
 
 	delete[] srcMacA;
@@ -398,7 +402,7 @@ void MainWindow::updateIPv4Checksum() {
 		ui->checksumEdit->setText(QString::number(htons(testL3->getIPHeader()->check), 16));
 	}
 
-	qDebug() << "updateIPv4Checksum()\t" << testL3->verifyIPv4Checksum();
+//	qDebug() << "updateIPv4Checksum()\t" << testL3->verifyIPv4Checksum();
 	if (testL3->verifyIPv4Checksum() != 0) {
 		// checksum incorrect, show in the GUI just in case
 		ui->checksumEdit->setStyleSheet("QLineEdit#checksumEdit{color:red}");
@@ -423,18 +427,28 @@ void MainWindow::updateHistory(QString s, L3Helper *l3, L2Helper *l2, bool l3Fla
 
 	qDebug() << "index: " << index << "\tframesSent: " << framesSent << "\thistorySize: " << historySize;
 
-    // update qcombobox with frame histry
-    if (history[index].title.isEmpty()) {
-        ui->comboBox->insertItem(index, QString("<untitled>"));
-    } else {
-        ui->comboBox->insertItem(index, history[index].title);
-    }
+	// update qcombobox with frame histry
+	if (historySize == 10) {
+		// do not add anymore entries
+		if (history[index].title.isEmpty()) {
+			ui->comboBox->setItemText(index, QString("<untitled>" + QString::number(framesSent)));
+		} else {
+			ui->comboBox->setItemText(index, history[index].title);
+		}
+	} else {
+		if (history[index].title.isEmpty()) {
+			ui->comboBox->insertItem(index, QString("<untitled>" + QString::number(framesSent)));
+		} else {
+			ui->comboBox->insertItem(index, history[index].title);
+		}
+	}
 
-    if (historySize > 0) {
-        ui->loadButton->setEnabled(true);
-    } else {
-        ui->loadButton->setEnabled(false);
-    }
+
+	if (historySize > 0) {
+		ui->loadButton->setEnabled(true);
+	} else {
+		ui->loadButton->setEnabled(false);
+	}
 
 }
 
@@ -490,93 +504,123 @@ bool MainWindow::loadHistoryFromFile(QString fileName) {
 }
 
 bool MainWindow::loadFrameFromHistory(int index) {
-    // take a frame from the history vector and load it in the L2Helper/L3Helper objects
-    // update the GUI too
-    qDebug() << "loadFrameFromHistory() index " << index;
+	// take a frame from the history vector and load it in the L2Helper/L3Helper objects
+	// update the GUI too
+	qDebug() << "loadFrameFromHistory() index " << index;
 
-    // do some error checking
-    if (index > historySize) { return false; }
+	// do some error checking
+	if (index > historySize) { return false; }
 
-    // it is probably easier to re-create these
-    testL2 = new L2Helper(*history[index].l2p);
-    testL3 = new L3Helper(*history[index].l3p);
-
-
-    // show values in GUI
-    updateFrameGUI(testL3, testL2, history[index].hasL3Payload, history[index].hasL2Payload);
-    ui->saveEdit->setText(history.at(index).title);
+	// it is probably easier to re-create these
+	testL2 = new L2Helper(*history[index].l2p);
+	testL3 = new L3Helper(*history[index].l3p);
 
 
-    return true;    // everything went ok
+	// show values in GUI
+	updateFrameGUI(testL3, testL2, history[index].hasL3Payload, history[index].hasL2Payload);
+	ui->saveEdit->setText(history.at(index).title);
+
+
+	return true;    // everything went ok
 
 }
 
 void MainWindow::updateFrameGUI(L3Helper *l3, L2Helper *l2, bool l3Flag, bool l2Flag) {
-    // show the contents of the L3Helper and L2Helper objects in the GUI
-    // l2Flag and l3Flag show whether the frame was built with a l2 or l3 custom payload
+	// show the contents of the L3Helper and L2Helper objects in the GUI
+	// l2Flag and l3Flag show whether the frame was built with a l2 or l3 custom payload
 
-    // L2 stuff
-    ui->srcMacEdit->setText(
-                QString::fromStdString(
-                    Utilities::arrayToMacAddressStr(l2->getSrcMac())));
-    ui->dstMacEdit->setText(
-                QString::fromStdString(
-                    Utilities::arrayToMacAddressStr(l2->getDstMac())));
-    ui->etherTypeEdit->setText(QString::number(l2->getEtherType(), 16).rightJustified(4, '0'));
-
-
-    if (l2->hasDot1Q()) {
-        ui->tpidEdit->setText(QString::number(l2->getTpid(), 16).rightJustified(4, '0'));
-        ui->pcpEdit->setText(QString::number(l2->getPcp(), 16));
-        ui->deiEdit->setText(QString::number(l2->getDei(), 16));
-        ui->vlanTagEdit->setText(QString::number(l2->getVlanID(), 16).rightJustified(4, '0'));
-    }
-    ui->dot1qCheckBox->setChecked(l2->hasDot1Q());
-    on_dot1qCheckBox_clicked(l2->hasDot1Q());
-
-    ui->l2PayloadCheckBox->setChecked(l2Flag);
-    on_l2PayloadCheckBox_clicked(l2Flag);
+	// L2 stuff
+	ui->srcMacEdit->setText(
+				QString::fromStdString(
+					Utilities::arrayToMacAddressStr(l2->getSrcMac())));
+	ui->dstMacEdit->setText(
+				QString::fromStdString(
+					Utilities::arrayToMacAddressStr(l2->getDstMac())));
+	ui->etherTypeEdit->setText(QString::number(l2->getEtherType(), 16).rightJustified(4, '0'));
 
 
-    QString tmpL2 = "";       // show l2 payload
-    for (int i = 0; i < l2->getPayloadSize(); i++) {
-        tmpL2.append(QString::number(l2->getPayload()[i], 16).rightJustified((2, '0', true)));
+	if (l2->hasDot1Q()) {
+		ui->tpidEdit->setText(QString::number(l2->getTpid(), 16).rightJustified(4, '0'));
+		ui->pcpEdit->setText(QString::number(l2->getPcp(), 16));
+		ui->deiEdit->setText(QString::number(l2->getDei(), 16));
+		ui->vlanTagEdit->setText(QString::number(l2->getVlanID(), 16).rightJustified(4, '0'));
+	}
+	ui->dot1qCheckBox->setChecked(l2->hasDot1Q());
+	on_dot1qCheckBox_clicked(l2->hasDot1Q());
 
-    }
-
-    ui->l2payloadEdit->setText(tmpL2);
-
+	ui->l2PayloadCheckBox->setChecked(l2Flag);
+	on_l2PayloadCheckBox_clicked(l2Flag);
 
 
-    // L3 stuff
-    ui->verEdit->setText(QString::number(l3->getVersion(), 16));
-    ui->ihlEdit->setText(QString::number(l3->getIHL(), 16));
-    ui->dscpEdit->setText(QString::number(l3->getDSCP(), 16).rightJustified(2, '0'));
-    ui->ecnEdit->setText(QString::number(l3->getECN(), 16));
-    ui->totLengthEdit->setText(QString::number(htons(l3->getIPHeader()->tot_len), 16).rightJustified(4, '0'));
-    ui->identificationEdit->setText(QString::number(htons(l3->getIPHeader()->id), 16).rightJustified(4, '0'));
-    ui->flagsEdit->setText(QString::number(l3->getFlags(), 16));
-    ui->fragOffsetEdit->setText(QString::number(l3->getFragOffset(), 16).rightJustified(4, '0'));
-    ui->ttlEdit->setText(QString::number(l3->getIPHeader()->ttl, 16));
-    ui->protocolEdit->setText(QString::number(l3->getIPHeader()->protocol, 16));
-    ui->checksumEdit->setText(QString::number(htons(l3->getIPHeader()->check), 16).rightJustified(4, '0'));
+	QString tmpL2 = "";       // show l2 payload
+	for (int i = 0; i < l2->getPayloadSize(); i++) {
+		tmpL2.append(QString::number(l2->getPayload()[i], 16).rightJustified((2, '0', true)));
 
-    ui->srcIPEdit->setText(QString(Utilities::intToIPAddressStr(l3->getIPHeader()->saddr).c_str()));
-    ui->dstIPEdit->setText(QString(Utilities::intToIPAddressStr(l3->getIPHeader()->daddr).c_str()));
+	}
 
-    ui->autoComputeCheckBox->setChecked(true);
-    on_autoComputeCheckBox_clicked(true);
+	ui->l2payloadEdit->setText(tmpL2);
 
-    ui->l3PayloadCheckBox->setChecked(l3Flag);
-    on_l3PayloadCheckBox_clicked(l3Flag);
 
-    QString tmpL3 = "";       // show l2 payload
-    for (int i = 0; i < l3->getL3PayloadSize(); i++) {
-        tmpL3.append(QString::number(l3->getL3Payload()[i], 16).rightJustified((2, '0', true)));
 
-    }
+	// L3 stuff
+	ui->verEdit->setText(QString::number(l3->getVersion(), 16));
+	ui->ihlEdit->setText(QString::number(l3->getIHL(), 16));
+	ui->dscpEdit->setText(QString::number(l3->getDSCP(), 16).rightJustified(2, '0'));
+	ui->ecnEdit->setText(QString::number(l3->getECN(), 16));
+	ui->totLengthEdit->setText(QString::number(htons(l3->getIPHeader()->tot_len), 16).rightJustified(4, '0'));
+	ui->identificationEdit->setText(QString::number(htons(l3->getIPHeader()->id), 16).rightJustified(4, '0'));
+	ui->flagsEdit->setText(QString::number(l3->getFlags(), 16));
+	ui->fragOffsetEdit->setText(QString::number(l3->getFragOffset(), 16).rightJustified(4, '0'));
+	ui->ttlEdit->setText(QString::number(l3->getIPHeader()->ttl, 16));
+	ui->protocolEdit->setText(QString::number(l3->getIPHeader()->protocol, 16));
+	ui->checksumEdit->setText(QString::number(htons(l3->getIPHeader()->check), 16).rightJustified(4, '0'));
 
-    ui->l3payloadEdit->setText(tmpL3);
+	ui->srcIPEdit->setText(QString(Utilities::intToIPAddressStr(l3->getIPHeader()->saddr).c_str()));
+	ui->dstIPEdit->setText(QString(Utilities::intToIPAddressStr(l3->getIPHeader()->daddr).c_str()));
+
+	ui->autoComputeCheckBox->setChecked(true);
+	on_autoComputeCheckBox_clicked(true);
+
+	ui->l3PayloadCheckBox->setChecked(l3Flag);
+	on_l3PayloadCheckBox_clicked(l3Flag);
+
+	QString tmpL3 = "";       // show l2 payload
+	for (int i = 0; i < l3->getL3PayloadSize(); i++) {
+		tmpL3.append(QString::number(l3->getL3Payload()[i], 16).rightJustified((2, '0', true)));
+
+	}
+
+	ui->l3payloadEdit->setText(tmpL3);
+
+}
+
+bool MainWindow::getNetInterfaces() {
+	// get the network interfaces that are currently connected to the system
+	// store them in an array to be able to retrieve them later
+	// also show them in ifacesComboBox
+
+	if (getifaddrs(&ifaddr) == -1) {
+		perror("getifaddrs");
+		return false;
+	}
+
+
+	for (ifa = ifaddr, nFam = 0; ifa != NULL; ifa = ifa->ifa_next, nFam++) {
+		// cycle through all the interfaces, only show the ones of family AF_PACKET
+		if (ifa->ifa_addr == NULL) { continue; }
+
+		family = ifa->ifa_addr->sa_family;
+
+		if (family == AF_PACKET) {
+			// show interface in combo box
+			ui->ifacesComboBox->addItem(QString(ifa->ifa_name));
+
+
+		}
+
+	}
+
+	return true;	// everything went well
 
 }
 
@@ -709,10 +753,10 @@ void MainWindow::on_l3PayloadCheckBox_clicked(bool checked) {
 	ui->l3payloadEdit->setEnabled(checked);
 }
 
-void MainWindow::on_actionSave_triggered() {
-	saveHistoryToFile(defHistorySaveFile);
-}
-
 void MainWindow::on_loadButton_clicked() {
 	loadFrameFromHistory(ui->comboBox->currentIndex());
+}
+
+void MainWindow::on_actionSave_History_triggered() {
+	saveHistoryToFile(defHistorySaveFile);
 }
