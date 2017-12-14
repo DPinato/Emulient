@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab1">
      <attribute name="title">
@@ -1037,6 +1037,84 @@ p, li { white-space: pre-wrap; }
      <attribute name="title">
       <string>Presets</string>
      </attribute>
+     <widget class="QTableView" name="tableView">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>661</width>
+        <height>331</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="startPresetButton">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>590</y>
+        <width>89</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Start</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="stopPresetButton">
+      <property name="geometry">
+       <rect>
+        <x>110</x>
+        <y>590</y>
+        <width>89</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>STOP</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="repeatCheckBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>360</y>
+        <width>81</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Repeat</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="repeatIndefCheckBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>390</y>
+        <width>161</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Repeat indefinitely</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="repeatNumEdit">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>360</y>
+        <width>61</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>100000</string>
+      </property>
+      <property name="maxLength">
+       <number>6</number>
+      </property>
+     </widget>
     </widget>
    </widget>
   </widget>

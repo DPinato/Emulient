@@ -26,10 +26,12 @@
 #include <QMainWindow>
 #include <QDebug>
 #include <QString>
+#include <QStringList>
 #include <QVector>
 #include <QFile>
 #include <QTextStream>
 #include <QByteArray>
+#include <QStandardItemModel>
 
 #include "utilities.h"
 #include "l2helper.h"
@@ -71,6 +73,8 @@ private slots:
 	void updateFrameGUI(L3Helper *l3, L2Helper *l2, bool l3Flag, bool l2Flag);
 	bool getNetInterfaces();
 
+	void testTableView();
+
 
 	// slots from GUI objects
 	void on_l2PayloadCheckBox_clicked(bool checked);
@@ -92,6 +96,10 @@ private slots:
 	void on_l3PayloadCheckBox_clicked(bool checked);
 	void on_loadButton_clicked();
 	void on_actionSave_History_triggered();
+
+	void on_repeatCheckBox_clicked(bool checked);
+
+	void on_repeatIndefCheckBox_clicked(bool checked);
 
 private:
 	Ui::MainWindow *ui;
@@ -127,6 +135,10 @@ private:
 	// to detect interfaces in the system
 	struct ifaddrs *ifaddr, *ifa;
 	int family, nFam;
+
+	QStringList ifaceList;	// maintain a list containing the names of the network interfaces
+
+	QStandardItemModel *testTable;
 
 
 };

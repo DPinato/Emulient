@@ -25,6 +25,7 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTabWidget>
+#include <QtWidgets/QTableView>
 #include <QtWidgets/QTextEdit>
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QWidget>
@@ -105,6 +106,12 @@ public:
     QPushButton *runMacTableButton;
     QCheckBox *bcastCheckBox;
     QWidget *tab;
+    QTableView *tableView;
+    QPushButton *startPresetButton;
+    QPushButton *stopPresetButton;
+    QCheckBox *repeatCheckBox;
+    QCheckBox *repeatIndefCheckBox;
+    QLineEdit *repeatNumEdit;
     QMenuBar *menuBar;
     QMenu *menuFile;
     QMenu *menuSave;
@@ -386,6 +393,25 @@ public:
         tabWidget->addTab(tab2, QString());
         tab = new QWidget();
         tab->setObjectName(QStringLiteral("tab"));
+        tableView = new QTableView(tab);
+        tableView->setObjectName(QStringLiteral("tableView"));
+        tableView->setGeometry(QRect(10, 10, 661, 331));
+        startPresetButton = new QPushButton(tab);
+        startPresetButton->setObjectName(QStringLiteral("startPresetButton"));
+        startPresetButton->setGeometry(QRect(10, 590, 89, 31));
+        stopPresetButton = new QPushButton(tab);
+        stopPresetButton->setObjectName(QStringLiteral("stopPresetButton"));
+        stopPresetButton->setGeometry(QRect(110, 590, 89, 31));
+        repeatCheckBox = new QCheckBox(tab);
+        repeatCheckBox->setObjectName(QStringLiteral("repeatCheckBox"));
+        repeatCheckBox->setGeometry(QRect(10, 360, 81, 25));
+        repeatIndefCheckBox = new QCheckBox(tab);
+        repeatIndefCheckBox->setObjectName(QStringLiteral("repeatIndefCheckBox"));
+        repeatIndefCheckBox->setGeometry(QRect(10, 390, 161, 25));
+        repeatNumEdit = new QLineEdit(tab);
+        repeatNumEdit->setObjectName(QStringLiteral("repeatNumEdit"));
+        repeatNumEdit->setGeometry(QRect(90, 360, 61, 25));
+        repeatNumEdit->setMaxLength(6);
         tabWidget->addTab(tab, QString());
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
@@ -412,7 +438,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(0);
+        tabWidget->setCurrentIndex(2);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -494,6 +520,11 @@ public:
         runMacTableButton->setText(QApplication::translate("MainWindow", "RUN", Q_NULLPTR));
         bcastCheckBox->setText(QApplication::translate("MainWindow", "Broadcast", Q_NULLPTR));
         tabWidget->setTabText(tabWidget->indexOf(tab2), QApplication::translate("MainWindow", "Stress Tests", Q_NULLPTR));
+        startPresetButton->setText(QApplication::translate("MainWindow", "Start", Q_NULLPTR));
+        stopPresetButton->setText(QApplication::translate("MainWindow", "STOP", Q_NULLPTR));
+        repeatCheckBox->setText(QApplication::translate("MainWindow", "Repeat", Q_NULLPTR));
+        repeatIndefCheckBox->setText(QApplication::translate("MainWindow", "Repeat indefinitely", Q_NULLPTR));
+        repeatNumEdit->setText(QApplication::translate("MainWindow", "100000", Q_NULLPTR));
         tabWidget->setTabText(tabWidget->indexOf(tab), QApplication::translate("MainWindow", "Presets", Q_NULLPTR));
         menuFile->setTitle(QApplication::translate("MainWindow", "File", Q_NULLPTR));
         menuSave->setTitle(QApplication::translate("MainWindow", "Save", Q_NULLPTR));

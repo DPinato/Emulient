@@ -76,7 +76,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	ui->loadButton->setEnabled(false);	// history should be empty at this point
 
+	ui->repeatNumEdit->setEnabled(false);
+
 	getNetInterfaces();
+
+
+
+	testTableView();
 
 
 }
@@ -614,13 +620,28 @@ bool MainWindow::getNetInterfaces() {
 		if (family == AF_PACKET) {
 			// show interface in combo box
 			ui->ifacesComboBox->addItem(QString(ifa->ifa_name));
-
-
+			ifaceList.append(QString(ifa->ifa_name));
 		}
 
 	}
 
 	return true;	// everything went well
+
+}
+
+void MainWindow::testTableView() {
+	// put each interface in each column
+
+	// initialise the model
+
+	testTable = new QStandardItemModel(10, ui->ifacesComboBox->count(), this);
+
+	// show interface names as the column headers
+	for (int i = 0; i < ui->ifacesComboBox->count(); i++) {
+		testTable->setHeaderData(i, Qt::Horizontal, QObject::tr(QString(ifaceList.at(i)).toStdString().c_str()));
+	}
+
+	ui->tableView->setModel(testTable);
 
 }
 
@@ -759,4 +780,14 @@ void MainWindow::on_loadButton_clicked() {
 
 void MainWindow::on_actionSave_History_triggered() {
 	saveHistoryToFile(defHistorySaveFile);
+}
+
+void MainWindow::on_repeatCheckBox_clicked(bool checked) {
+	ui->repeatNumEdit->setEnabled(checked);
+}
+
+void MainWindow::on_repeatIndefCheckBox_clicked(bool checked) {
+    on_repeatCheckBox_clicked(!checked);
+    ui->repeatCheckBox->setChecked(!checked);
+    ui->repeatCheckBox->setEnabled(!checked);
 }
