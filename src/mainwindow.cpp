@@ -112,6 +112,7 @@ void MainWindow::sendFrame() {
 	uint16_t etherType = ui->etherTypeEdit->text().toUInt(NULL, 16);
 	uint8_t *srcMacA = new uint8_t [6];
 	uint8_t *dstMacA = new uint8_t [6];
+	int framesToSend = ui->framesToSendEdit->text().toInt();
 
 
 
@@ -256,22 +257,26 @@ void MainWindow::sendFrame() {
 
 	int txLen = testL2->getFrameSize();   // transmission length
 
-	// send frame
+	// send frames
 	std::string iface = ui->ifacesComboBox->itemText(ui->ifacesComboBox->currentIndex()).toStdString();
 	LinuxSocket *testSock = new LinuxSocket(dstMacA, iface);
-	testSock->send(txLen, testL2->getSendbuf());
 
-	qDebug() << "\n";
+	for (int i = 0; i < framesToSend; i++) {
+		testSock->send(txLen, testL2->getSendbuf());
 
+		// update counters
+		framesSent++;
+		ui->framesSentLabel->setText(QString::number(framesSent));
+
+	}
 
 	updateHistory(ui->saveEdit->text(), testL3, testL2,
 				  ui->l3PayloadCheckBox->isChecked(), ui->l2PayloadCheckBox->isChecked());
 
-	// update counters
-	framesSent++;
+	qDebug() << "\n";
+
 
 	// update GUI
-	ui->framesSentLabel->setText(QString::number(framesSent));
 	ui->saveEdit->setText("");
 
 
@@ -787,7 +792,7 @@ void MainWindow::on_repeatCheckBox_clicked(bool checked) {
 }
 
 void MainWindow::on_repeatIndefCheckBox_clicked(bool checked) {
-    on_repeatCheckBox_clicked(!checked);
-    ui->repeatCheckBox->setChecked(!checked);
-    ui->repeatCheckBox->setEnabled(!checked);
+	on_repeatCheckBox_clicked(!checked);
+	ui->repeatCheckBox->setChecked(!checked);
+	ui->repeatCheckBox->setEnabled(!checked);
 }

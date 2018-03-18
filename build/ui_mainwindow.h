@@ -98,6 +98,7 @@ public:
     QLabel *label_26;
     QComboBox *ifacesComboBox;
     QLabel *framesSentLabel;
+    QLineEdit *framesToSendEdit;
     QWidget *tab2;
     QLabel *label_3;
     QLineEdit *macTableTestEdit;
@@ -341,17 +342,17 @@ public:
         vlanTagEdit->setMaxLength(3);
         saveEdit = new QLineEdit(tab1);
         saveEdit->setObjectName(QStringLiteral("saveEdit"));
-        saveEdit->setGeometry(QRect(390, 560, 271, 31));
-        saveEdit->setMaxLength(30);
+        saveEdit->setGeometry(QRect(450, 560, 211, 31));
+        saveEdit->setMaxLength(20);
         loadButton = new QPushButton(tab1);
         loadButton->setObjectName(QStringLiteral("loadButton"));
-        loadButton->setGeometry(QRect(268, 600, 111, 31));
+        loadButton->setGeometry(QRect(370, 600, 71, 31));
         comboBox = new QComboBox(tab1);
         comboBox->setObjectName(QStringLiteral("comboBox"));
-        comboBox->setGeometry(QRect(390, 600, 271, 31));
+        comboBox->setGeometry(QRect(450, 600, 211, 31));
         label_25 = new QLabel(tab1);
         label_25->setObjectName(QStringLiteral("label_25"));
-        label_25->setGeometry(QRect(330, 560, 51, 25));
+        label_25->setGeometry(QRect(390, 560, 51, 25));
         label_25->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
         label_26 = new QLabel(tab1);
         label_26->setObjectName(QStringLiteral("label_26"));
@@ -367,6 +368,10 @@ public:
         font.setPointSize(14);
         framesSentLabel->setFont(font);
         framesSentLabel->setAlignment(Qt::AlignCenter);
+        framesToSendEdit = new QLineEdit(tab1);
+        framesToSendEdit->setObjectName(QStringLiteral("framesToSendEdit"));
+        framesToSendEdit->setGeometry(QRect(210, 600, 101, 31));
+        framesToSendEdit->setMaxLength(10);
         tabWidget->addTab(tab1, QString());
         tab2 = new QWidget();
         tab2->setObjectName(QStringLiteral("tab2"));
@@ -438,7 +443,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(2);
+        tabWidget->setCurrentIndex(0);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -508,10 +513,11 @@ public:
         label_24->setText(QApplication::translate("MainWindow", "VLAN ID", Q_NULLPTR));
         vlanTagEdit->setText(QApplication::translate("MainWindow", "20", Q_NULLPTR));
         saveEdit->setText(QString());
-        loadButton->setText(QApplication::translate("MainWindow", "LOAD FRAME", Q_NULLPTR));
+        loadButton->setText(QApplication::translate("MainWindow", "LOAD", Q_NULLPTR));
         label_25->setText(QApplication::translate("MainWindow", "Name:", Q_NULLPTR));
         label_26->setText(QApplication::translate("MainWindow", "Interface:", Q_NULLPTR));
         framesSentLabel->setText(QApplication::translate("MainWindow", "<sent #>", Q_NULLPTR));
+        framesToSendEdit->setText(QApplication::translate("MainWindow", "1", Q_NULLPTR));
         tabWidget->setTabText(tabWidget->indexOf(tab1), QApplication::translate("MainWindow", "Raw Frame / IPv4", Q_NULLPTR));
         label_3->setText(QApplication::translate("MainWindow", "MAC Table, from", Q_NULLPTR));
         macTableTestEdit->setText(QApplication::translate("MainWindow", "12:34:bb:aa:cc:dd", Q_NULLPTR));

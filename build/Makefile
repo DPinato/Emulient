@@ -791,10 +791,14 @@ moc_mainwindow.cpp: ../../../../Qt/5.9.2/gcc_64/include/QtWidgets/QMainWindow \
 		../../../../Qt/5.9.2/gcc_64/include/QtGui/qicon.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QDebug \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QString \
+		../../../../Qt/5.9.2/gcc_64/include/QtCore/QStringList \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QVector \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QFile \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QTextStream \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QByteArray \
+		../../../../Qt/5.9.2/gcc_64/include/QtGui/QStandardItemModel \
+		../../../../Qt/5.9.2/gcc_64/include/QtGui/qstandarditemmodel.h \
+		../../../../Qt/5.9.2/gcc_64/include/QtCore/qabstractitemmodel.h \
 		../src/utilities.h \
 		../src/mainwindow.h \
 		../src/l2helper.h \
@@ -930,10 +934,14 @@ main.o: ../src/main.cpp ../src/mainwindow.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtGui/qicon.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QDebug \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QString \
+		../../../../Qt/5.9.2/gcc_64/include/QtCore/QStringList \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QVector \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QFile \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QTextStream \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QByteArray \
+		../../../../Qt/5.9.2/gcc_64/include/QtGui/QStandardItemModel \
+		../../../../Qt/5.9.2/gcc_64/include/QtGui/qstandarditemmodel.h \
+		../../../../Qt/5.9.2/gcc_64/include/QtCore/qabstractitemmodel.h \
 		../src/utilities.h \
 		../src/l2helper.h \
 		../src/l3helper.h \
@@ -1053,10 +1061,14 @@ mainwindow.o: ../src/mainwindow.cpp ../src/mainwindow.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtGui/qicon.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QDebug \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QString \
+		../../../../Qt/5.9.2/gcc_64/include/QtCore/QStringList \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QVector \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QFile \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QTextStream \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QByteArray \
+		../../../../Qt/5.9.2/gcc_64/include/QtGui/QStandardItemModel \
+		../../../../Qt/5.9.2/gcc_64/include/QtGui/qstandarditemmodel.h \
+		../../../../Qt/5.9.2/gcc_64/include/QtCore/qabstractitemmodel.h \
 		../src/utilities.h \
 		../src/l2helper.h \
 		../src/l3helper.h \
@@ -1091,7 +1103,6 @@ mainwindow.o: ../src/mainwindow.cpp ../src/mainwindow.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtWidgets/qtabbar.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtWidgets/qrubberband.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtWidgets/qframe.h \
-		../../../../Qt/5.9.2/gcc_64/include/QtCore/qabstractitemmodel.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtWidgets/QFrame \
 		../../../../Qt/5.9.2/gcc_64/include/QtWidgets/QHeaderView \
 		../../../../Qt/5.9.2/gcc_64/include/QtWidgets/qheaderview.h \
@@ -1115,6 +1126,8 @@ mainwindow.o: ../src/mainwindow.cpp ../src/mainwindow.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtWidgets/QStatusBar \
 		../../../../Qt/5.9.2/gcc_64/include/QtWidgets/qstatusbar.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtWidgets/QTabWidget \
+		../../../../Qt/5.9.2/gcc_64/include/QtWidgets/QTableView \
+		../../../../Qt/5.9.2/gcc_64/include/QtWidgets/qtableview.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtWidgets/QTextEdit \
 		../../../../Qt/5.9.2/gcc_64/include/QtWidgets/qtextedit.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtGui/qtextdocument.h \
@@ -1230,10 +1243,14 @@ utilities.o: ../src/utilities.cpp ../src/utilities.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtGui/qicon.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QDebug \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QString \
+		../../../../Qt/5.9.2/gcc_64/include/QtCore/QStringList \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QVector \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QFile \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QTextStream \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QByteArray \
+		../../../../Qt/5.9.2/gcc_64/include/QtGui/QStandardItemModel \
+		../../../../Qt/5.9.2/gcc_64/include/QtGui/qstandarditemmodel.h \
+		../../../../Qt/5.9.2/gcc_64/include/QtCore/qabstractitemmodel.h \
 		../src/l2helper.h \
 		../src/l3helper.h \
 		../src/linuxsocket.h
@@ -1346,10 +1363,14 @@ l2helper.o: ../src/l2helper.cpp ../src/l2helper.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtGui/qicon.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QDebug \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QString \
+		../../../../Qt/5.9.2/gcc_64/include/QtCore/QStringList \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QVector \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QFile \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QTextStream \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QByteArray \
+		../../../../Qt/5.9.2/gcc_64/include/QtGui/QStandardItemModel \
+		../../../../Qt/5.9.2/gcc_64/include/QtGui/qstandarditemmodel.h \
+		../../../../Qt/5.9.2/gcc_64/include/QtCore/qabstractitemmodel.h \
 		../src/utilities.h \
 		../src/l3helper.h \
 		../src/linuxsocket.h
@@ -1462,10 +1483,14 @@ l3helper.o: ../src/l3helper.cpp ../src/l3helper.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtGui/qicon.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QDebug \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QString \
+		../../../../Qt/5.9.2/gcc_64/include/QtCore/QStringList \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QVector \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QFile \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QTextStream \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QByteArray \
+		../../../../Qt/5.9.2/gcc_64/include/QtGui/QStandardItemModel \
+		../../../../Qt/5.9.2/gcc_64/include/QtGui/qstandarditemmodel.h \
+		../../../../Qt/5.9.2/gcc_64/include/QtCore/qabstractitemmodel.h \
 		../src/utilities.h \
 		../src/l2helper.h \
 		../src/linuxsocket.h
@@ -1578,10 +1603,14 @@ linuxsocket.o: ../src/linuxsocket.cpp ../src/linuxsocket.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtGui/qicon.h \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QDebug \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QString \
+		../../../../Qt/5.9.2/gcc_64/include/QtCore/QStringList \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QVector \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QFile \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QTextStream \
 		../../../../Qt/5.9.2/gcc_64/include/QtCore/QByteArray \
+		../../../../Qt/5.9.2/gcc_64/include/QtGui/QStandardItemModel \
+		../../../../Qt/5.9.2/gcc_64/include/QtGui/qstandarditemmodel.h \
+		../../../../Qt/5.9.2/gcc_64/include/QtCore/qabstractitemmodel.h \
 		../src/utilities.h \
 		../src/l2helper.h \
 		../src/l3helper.h
